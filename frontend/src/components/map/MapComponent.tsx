@@ -1,6 +1,6 @@
 import React from 'react';
 import { useMap } from '../../hooks/useMap';
-import { usePlacesSearch } from '../../hooks/usePlacesSearch';
+import { usePlacesSearch } from '../../hooks/UsePlacesSearch';
 import { MapComponentProps } from '../../types';
 
 export const MapComponent: React.FC<MapComponentProps> = ({
