@@ -119,7 +119,7 @@ html, body, #root {
   padding: 1rem;
   border-radius: 8px;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-  min-width: 200px;
+  min-width: 220px;
   z-index: 1000;
 }
 
@@ -133,6 +133,13 @@ html, body, #root {
 
 .layer-item {
   margin-bottom: 1rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid #f3f4f6;
+}
+
+.layer-item:last-of-type {
+  border-bottom: none;
+  margin-bottom: 0.5rem;
 }
 
 .layer-item label {
@@ -142,10 +149,16 @@ html, body, #root {
   cursor: pointer;
   font-size: 0.9rem;
   color: #374151;
+  font-weight: 500;
 }
 
 .layer-item input[type="checkbox"] {
   margin-right: 0.5rem;
+}
+
+.loading-indicator {
+  font-size: 0.8rem;
+  margin-left: 0.5rem;
 }
 
 .opacity-control {
@@ -157,11 +170,40 @@ html, body, #root {
   font-size: 0.8rem;
   color: #6b7280;
   margin-bottom: 0.25rem;
+  font-weight: normal;
 }
 
 .opacity-control input[type="range"] {
   width: 100%;
   margin-top: 0.25rem;
+}
+
+.api-status {
+  margin-top: 0.75rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid #e5e7eb;
+}
+
+.status-text {
+  font-size: 0.8rem;
+  color: #6b7280;
+  margin: 0;
+  display: flex;
+  align-items: center;
+}
+
+/* Building marker popup styles */
+.esri-popup__content {
+  font-family: inherit;
+}
+
+.esri-popup__content p {
+  margin: 0.5rem 0;
+  line-height: 1.4;
+}
+
+.esri-popup__content strong {
+  color: #374151;
 }
 
 /* Import ArcGIS CSS */

@@ -42,8 +42,8 @@ class BuildingDataService {
       }
 
       const raw = await response.json();
-      const data = raw[0]?.['@func']?.[0]?.['#result']?.['#data'] || [];
-      
+      console.log('Raw API response:', raw);
+      const data = raw[0]["@func"][0]['#result']['#data'];
       return this.parseBuildings(data);
     } catch (error) {
       console.error('Error fetching building data:', error);
@@ -61,8 +61,6 @@ class BuildingDataService {
     
     // Parse each building record from the API data
     apiData.forEach(record => {
-      // Ensure the record has the necessary fields
-      
       // Extract coordinates (using your exact field names)
       const latitude = record.LATITUDE;
       const longitude = record.LONGITUDE;
@@ -283,27 +281,43 @@ const SimpleMap = () => {
 
     // Load building data from API
     const loadBuildingData = async () => {
+      console.log('🚀 Starting to load building data...');
       setLoadingBuildings(true);
+      
       try {
-        let buildingData;
+        let buildingData = [];
         
-        // Try to load from API first
+        // Always try API first
+        console.log('📡 Attempting to fetch from Efficy API...');
         try {
           buildingData = await BuildingDataService.fetchBuildings();
-          console.log('Loaded buildings from API:', buildingData.length);
+          console.log('🎉 Successfully loaded buildings from API:', buildingData.length);
+          
+          if (buildingData.length === 0) {
+            console.warn('⚠️ API returned no buildings, using mock data');
+            buildingData = BuildingDataService.getMockBuildings();
+          }
         } catch (apiError) {
-          console.warn('API failed, using mock data:', apiError);
+          console.error('❌ API call failed:', apiError);
+          console.log('🔄 Falling back to mock data...');
           buildingData = BuildingDataService.getMockBuildings();
         }
 
+        console.log('📋 Final building data to display:', buildingData);
         setBuildings(buildingData);
-        await addBuildingsToMap(buildingData);
+        
+        if (buildingData.length > 0) {
+          await addBuildingsToMap(buildingData);
+        } else {
+          console.error('❌ No building data available to display');
+        }
         
       } catch (error) {
-        console.error('Error loading building data:', error);
+        console.error('💥 Critical error loading building data:', error);
         setError('Failed to load building data: ' + error.message);
       } finally {
         setLoadingBuildings(false);
+        console.log('✅ Building data loading process completed');
       }
     };
 
@@ -328,7 +342,6 @@ const SimpleMap = () => {
 
         // Add building markers
         buildingData.forEach(building => {
-          console.log(`Adding building: ${building.name} (${building.latitude}, ${building.longitude})`);
           // Create point geometry
           const point = new Point({
             longitude: building.longitude,
@@ -554,7 +567,12 @@ const SimpleMap = () => {
           {/* API Status */}
           <div className="api-status">
             <p className="status-text">
-              🟢 API Connected
+              {loadingBuildings ? '⏳ Loading buildings...' : 
+               buildings.length > 0 ? `🟢 ${buildings.length} buildings loaded` : 
+               '🟡 No buildings found'}
+            </p>
+            <p className="status-text" style={{ fontSize: '0.7rem', marginTop: '0.25rem' }}>
+              Data source: {buildings.length > 3 ? 'Efficy API' : 'Mock data'}
             </p>
           </div>
         </div>
