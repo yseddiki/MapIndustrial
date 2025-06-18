@@ -41,11 +41,9 @@ class BuildingDataService {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
 
-      let data = await response.json();
-      console.log('Fetched building data:', data);
-      data = data[0]['@func'][0]['#result']['#data']; // Assuming the first item contains the building data
-      console.log('Parsed building data:', data);
-
+      const raw = await response.json();
+      const data = raw[0]?.['@func']?.[0]?.['#result']?.['#data'] || [];
+      
       return this.parseBuildings(data);
     } catch (error) {
       console.error('Error fetching building data:', error);
@@ -55,64 +53,100 @@ class BuildingDataService {
 
   static parseBuildings(apiData) {
     // Parse the Efficy response to extract building coordinates
-    // This will need to be adjusted based on the actual response structure
     if (!apiData || !Array.isArray(apiData)) {
       return [];
     }
 
     const buildings = [];
     
-    // Assuming the response contains building data with coordinates
-    // You may need to adjust this parsing based on the actual API response structure
-    apiData.forEach(item => {
-      if (item.records) {
-        item.records.forEach(record => {
-          // Look for coordinate fields - adjust field names as needed
-          const latitude = record.Latitude || record.lat || record.Y;
-          const longitude = record.Longitude || record.lng || record.lon || record.X;
-          const buildingName = record.Name || record.BuildingName || record.Title || `Building ${record.ID}`;
-          const address = record.Address || record.Location || '';
+    // Parse each building record from the API data
+    apiData.forEach(record => {
+      // Ensure the record has the necessary fields
+      
+      // Extract coordinates (using your exact field names)
+      const latitude = record.LATITUDE;
+      const longitude = record.LONGITUDE;
+      
+      // Extract building information
+      const buildingName = record.NAME || `Property ${record.K_PROPERTY}`;
+      const propertyId = record.K_PROPERTY;
+      
+      // Build address from components
+      let address = '';
+      if (record.F_STREET_NL && record.F_STREET_NUM) {
+        address = `${record.F_STREET_NL} ${record.F_STREET_NUM}`;
+        if (record.F_CITY_NL || record.F_CITY_FR) {
+          address += `, ${record.F_CITY_NL || record.F_CITY_FR}`;
+        }
+      } else if (record.F_CITY_NL || record.F_CITY_FR) {
+        address = record.F_CITY_NL || record.F_CITY_FR;
+      }
 
-          if (latitude && longitude) {
-            buildings.push({
-              id: record.ID || record.Id || Math.random().toString(36),
-              name: buildingName,
-              address: address,
-              latitude: parseFloat(latitude),
-              longitude: parseFloat(longitude),
-              ...record // Include all other properties
-            });
-          }
+      // Only add buildings with valid coordinates
+      if (latitude && longitude && !isNaN(latitude) && !isNaN(longitude)) {
+        buildings.push({
+          id: propertyId || Math.random().toString(36),
+          name: buildingName,
+          address: address,
+          latitude: parseFloat(latitude),
+          longitude: parseFloat(longitude),
+          // Additional details
+          cityFR: record.F_CITY_FR,
+          cityNL: record.F_CITY_NL,
+          streetNL: record.F_STREET_NL,
+          streetNumber: record.F_STREET_NUM,
+          propertyId: record.K_PROPERTY,
+          assetClasses: record.F_ASSET_CLASSES,
+          ...record // Include all other properties for debugging
         });
       }
     });
 
+    console.log(`Parsed ${buildings.length} valid buildings from ${apiData.length} records`);
     return buildings;
   }
 
-  // Fallback mock data for testing
+  // Fallback mock data for testing (matching your API structure)
   static getMockBuildings() {
     return [
       {
-        id: '1',
+        id: '27899',
+        name: 'Langveld Park',
+        address: 'Petrus Basteleusstraat 2, Sint-Pieters-Leeuw',
+        latitude: 50.78771,
+        longitude: 4.27725,
+        propertyId: '27899',
+        cityFR: 'Sint-Pieters-Leeuw',
+        cityNL: 'Sint-Pieters-Leeuw',
+        streetNL: 'Petrus Basteleusstraat',
+        streetNumber: '2',
+        assetClasses: ';4;'
+      },
+      {
+        id: '27900',
         name: 'CBRE Brussels Office',
-        address: 'Rue de la Loi 227, 1040 Brussels',
+        address: 'Rue de la Loi 227, Brussels',
         latitude: 50.8454,
-        longitude: 4.3695
+        longitude: 4.3695,
+        propertyId: '27900',
+        cityFR: 'Bruxelles',
+        cityNL: 'Brussel',
+        streetNL: 'Wetstraat',
+        streetNumber: '227',
+        assetClasses: ';1;'
       },
       {
-        id: '2',
-        name: 'Brussels Business Center',
-        address: 'Avenue Louise 250, 1050 Brussels',
-        latitude: 50.8263,
-        longitude: 4.3649
-      },
-      {
-        id: '3',
-        name: 'Antwerp Tower',
-        address: 'Meir 24, 2000 Antwerp',
+        id: '27901',
+        name: 'Antwerp Business Center',
+        address: 'Meir 24, Antwerp',
         latitude: 51.2194,
-        longitude: 4.4025
+        longitude: 4.4025,
+        propertyId: '27901',
+        cityFR: 'Anvers',
+        cityNL: 'Antwerpen',
+        streetNL: 'Meir',
+        streetNumber: '24',
+        assetClasses: ';2;3;'
       }
     ];
   }
@@ -294,6 +328,7 @@ const SimpleMap = () => {
 
         // Add building markers
         buildingData.forEach(building => {
+          console.log(`Adding building: ${building.name} (${building.latitude}, ${building.longitude})`);
           // Create point geometry
           const point = new Point({
             longitude: building.longitude,
@@ -315,9 +350,12 @@ const SimpleMap = () => {
             title: building.name,
             content: `
               <div>
+                <p><strong>Property ID:</strong> ${building.propertyId}</p>
                 <p><strong>Address:</strong> ${building.address}</p>
+                ${building.cityFR && building.cityNL && building.cityFR !== building.cityNL ? 
+                  `<p><strong>City:</strong> ${building.cityNL} / ${building.cityFR}</p>` : ''}
+                ${building.assetClasses ? `<p><strong>Asset Classes:</strong> ${building.assetClasses}</p>` : ''}
                 <p><strong>Coordinates:</strong> ${building.latitude.toFixed(6)}, ${building.longitude.toFixed(6)}</p>
-                <p><strong>Building ID:</strong> ${building.id}</p>
               </div>
             `
           });
