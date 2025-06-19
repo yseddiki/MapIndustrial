@@ -36,14 +36,13 @@ class BuildingDataService {
           }
         ])
       });
+      const raw = await response.json(); console.log('Raw API response:', raw); const data = raw[0]["@func"][0]['#result']['#data'];
 
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
 
-      const raw = await response.json();
-      console.log('Raw API response:', raw);
-      const data = raw[0]["@func"][0]['#result']['#data'];
+      
       return this.parseBuildings(data);
     } catch (error) {
       console.error('Error fetching building data:', error);
@@ -52,24 +51,18 @@ class BuildingDataService {
   }
 
   static parseBuildings(apiData) {
-    // Parse the Efficy response to extract building coordinates
     if (!apiData || !Array.isArray(apiData)) {
       return [];
     }
 
     const buildings = [];
     
-    // Parse each building record from the API data
     apiData.forEach(record => {
-      // Extract coordinates (using your exact field names)
       const latitude = record.LATITUDE;
       const longitude = record.LONGITUDE;
-      
-      // Extract building information
       const buildingName = record.NAME || `Property ${record.K_PROPERTY}`;
       const propertyId = record.K_PROPERTY;
       
-      // Build address from components
       let address = '';
       if (record.F_STREET_NL && record.F_STREET_NUM) {
         address = `${record.F_STREET_NL} ${record.F_STREET_NUM}`;
@@ -80,7 +73,6 @@ class BuildingDataService {
         address = record.F_CITY_NL || record.F_CITY_FR;
       }
 
-      // Only add buildings with valid coordinates
       if (latitude && longitude && !isNaN(latitude) && !isNaN(longitude)) {
         buildings.push({
           id: propertyId || Math.random().toString(36),
@@ -88,14 +80,13 @@ class BuildingDataService {
           address: address,
           latitude: parseFloat(latitude),
           longitude: parseFloat(longitude),
-          // Additional details
           cityFR: record.F_CITY_FR,
           cityNL: record.F_CITY_NL,
           streetNL: record.F_STREET_NL,
           streetNumber: record.F_STREET_NUM,
           propertyId: record.K_PROPERTY,
           assetClasses: record.F_ASSET_CLASSES,
-          ...record // Include all other properties for debugging
+          ...record
         });
       }
     });
@@ -153,6 +144,7 @@ class BuildingDataService {
 // Simple ArcGIS Map Component with Building Data
 const SimpleMap = () => {
   const mapContainerRef = useRef(null);
+  const viewRef = useRef(null);
   const [isMapReady, setIsMapReady] = useState(false);
   const [error, setError] = useState(null);
   const [cadastreLayer, setCadastreLayer] = useState(null);
@@ -229,14 +221,15 @@ const SimpleMap = () => {
         // Create buildings layer
         const buildingsLayerInstance = new GraphicsLayer({
           title: 'Buildings',
-          visible: buildingsVisible
+          visible: true, // Explicitly set to true
+          listMode: 'show'
         });
 
         // Store layer references for controls
         setCadastreLayer(cadastreLayerInstance);
         setBuildingsLayer(buildingsLayerInstance);
 
-        // Create map with layers
+        // Create map with layers - PUT BUILDINGS LAYER ON TOP
         map = new Map({
           basemap: 'streets-vector',
           layers: [cadastreLayerInstance, buildingsLayerInstance]
@@ -253,11 +246,20 @@ const SimpleMap = () => {
           }
         });
 
+        // Store view reference
+        viewRef.current = view;
+
         // Handle view ready event
         view.when(() => {
           console.log('Map loaded successfully');
           setIsMapReady(true);
-          loadBuildingData(); // Load building data after map is ready
+          
+          // WAIT A BIT MORE to ensure layers are ready, then load buildings
+          setTimeout(() => {
+            console.log('🎯 Now loading buildings - layer should be ready');
+            console.log('🎯 Buildings layer exists?', !!buildingsLayerInstance);
+            loadBuildingData(buildingsLayerInstance); // Pass the layer directly
+          }, 500);
         }, (error) => {
           console.error('Map view failed to load:', error);
           setError('Failed to initialize map view: ' + error.message);
@@ -280,36 +282,41 @@ const SimpleMap = () => {
     };
 
     // Load building data from API
-    const loadBuildingData = async () => {
-      console.log('🚀 Starting to load building data...');
-      setLoadingBuildings(true);
+    const loadBuildingData = async (layerInstance = null) => {
+      const targetLayer = layerInstance || buildingsLayer;
+      console.log('🚀 loadBuildingData called with layer:', !!targetLayer);
       
+      setLoadingBuildings(true);
       try {
         let buildingData = [];
         
-        // Always try API first
-        console.log('📡 Attempting to fetch from Efficy API...');
         try {
           buildingData = await BuildingDataService.fetchBuildings();
-          console.log('🎉 Successfully loaded buildings from API:', buildingData.length);
+          console.log('✅ API SUCCESS - Loaded buildings from API:', buildingData.length);
+          console.log('✅ API SUCCESS - First building:', buildingData[0]);
           
           if (buildingData.length === 0) {
             console.warn('⚠️ API returned no buildings, using mock data');
             buildingData = BuildingDataService.getMockBuildings();
           }
         } catch (apiError) {
-          console.error('❌ API call failed:', apiError);
-          console.log('🔄 Falling back to mock data...');
+          console.error('❌ API FAILED:', apiError);
           buildingData = BuildingDataService.getMockBuildings();
+          console.log('🔄 Using mock data instead, count:', buildingData.length);
         }
 
-        console.log('📋 Final building data to display:', buildingData);
+        console.log('📋 FINAL DATA to pass to map:', buildingData);
+        console.log('📋 FINAL DATA length:', buildingData.length);
         setBuildings(buildingData);
         
-        if (buildingData.length > 0) {
-          await addBuildingsToMap(buildingData);
+        if (buildingData.length > 0 && targetLayer) {
+          console.log('🗺️ About to call addBuildingsToMap with', buildingData.length, 'buildings');
+          await addBuildingsToMap(buildingData, targetLayer);
         } else {
-          console.error('❌ No building data available to display');
+          console.error('❌ NO BUILDINGS TO ADD TO MAP OR NO LAYER:', {
+            buildingsCount: buildingData.length,
+            hasLayer: !!targetLayer
+          });
         }
         
       } catch (error) {
@@ -317,13 +324,26 @@ const SimpleMap = () => {
         setError('Failed to load building data: ' + error.message);
       } finally {
         setLoadingBuildings(false);
-        console.log('✅ Building data loading process completed');
       }
     };
 
     // Add building markers to map
-    const addBuildingsToMap = async (buildingData) => {
-      if (!buildingsLayer || !buildingData.length) return;
+    const addBuildingsToMap = async (buildingData, layerInstance = null) => {
+      const targetLayer = layerInstance || buildingsLayer;
+      
+      console.log('🗺️ addBuildingsToMap CALLED with:', buildingData);
+      console.log('🗺️ addBuildingsToMap - targetLayer exists?', !!targetLayer);
+      console.log('🗺️ addBuildingsToMap - buildingData length:', buildingData?.length);
+      
+      if (!targetLayer) {
+        console.error('❌ CRITICAL: No targetLayer!');
+        return;
+      }
+      
+      if (!buildingData || buildingData.length === 0) {
+        console.error('❌ CRITICAL: No buildingData!');
+        return;
+      }
 
       try {
         const { Graphic, Point, SimpleMarkerSymbol, PopupTemplate } = await new Promise((resolve, reject) => {
@@ -337,57 +357,106 @@ const SimpleMap = () => {
           }, reject);
         });
 
+        console.log('📦 ArcGIS modules loaded successfully');
+
         // Clear existing graphics
-        buildingsLayer.removeAll();
+        targetLayer.removeAll();
+        console.log('🧹 Cleared existing graphics');
 
-        // Add building markers
-        buildingData.forEach(building => {
-          // Create point geometry
-          const point = new Point({
-            longitude: building.longitude,
-            latitude: building.latitude
-          });
+        // Force layer to be visible
+        targetLayer.visible = true;
+        console.log('👁️ Set layer to visible');
 
-          // Create symbol
-          const symbol = new SimpleMarkerSymbol({
-            color: [255, 69, 0], // Orange red color for buildings
-            outline: {
-              color: [255, 255, 255],
-              width: 2
-            },
-            size: '12px'
-          });
+        // Add building markers with VERY VISIBLE symbols
+        let addedCount = 0;
+        buildingData.forEach((building, index) => {
+          console.log(`🏢 Processing building ${index + 1}:`, building);
+          console.log(`📍 Coordinates: lat=${building.latitude}, lng=${building.longitude}`);
+          
+          try {
+            // Create point geometry
+            const point = new Point({
+              longitude: building.longitude,
+              latitude: building.latitude,
+              spatialReference: { wkid: 4326 } // Explicitly set coordinate system
+            });
+            console.log(`✅ Created point for ${building.name}:`, point);
 
-          // Create popup template
-          const popupTemplate = new PopupTemplate({
-            title: building.name,
-            content: `
-              <div>
-                <p><strong>Property ID:</strong> ${building.propertyId}</p>
-                <p><strong>Address:</strong> ${building.address}</p>
-                ${building.cityFR && building.cityNL && building.cityFR !== building.cityNL ? 
-                  `<p><strong>City:</strong> ${building.cityNL} / ${building.cityFR}</p>` : ''}
-                ${building.assetClasses ? `<p><strong>Asset Classes:</strong> ${building.assetClasses}</p>` : ''}
-                <p><strong>Coordinates:</strong> ${building.latitude.toFixed(6)}, ${building.longitude.toFixed(6)}</p>
-              </div>
-            `
-          });
+            // Create VERY VISIBLE symbol
+            const symbol = new SimpleMarkerSymbol({
+              color: [255, 0, 0], // Bright red instead of orange
+              outline: {
+                color: [0, 0, 0], // Black outline instead of white
+                width: 3
+              },
+              size: '20px' // Much larger
+            });
+            console.log(`✅ Created symbol for ${building.name}`);
 
-          // Create graphic
-          const graphic = new Graphic({
-            geometry: point,
-            symbol: symbol,
-            attributes: building,
-            popupTemplate: popupTemplate
-          });
+            // Create popup template
+            const popupTemplate = new PopupTemplate({
+              title: building.name,
+              content: `
+                <div>
+                  <p><strong>Property ID:</strong> ${building.propertyId}</p>
+                  <p><strong>Address:</strong> ${building.address}</p>
+                  <p><strong>Coordinates:</strong> ${building.latitude.toFixed(6)}, ${building.longitude.toFixed(6)}</p>
+                </div>
+              `
+            });
 
-          // Add to layer
-          buildingsLayer.add(graphic);
+            // Create graphic
+            const graphic = new Graphic({
+              geometry: point,
+              symbol: symbol,
+              attributes: building,
+              popupTemplate: popupTemplate
+            });
+            console.log(`✅ Created graphic for ${building.name}:`, graphic);
+
+            // Add to layer
+            targetLayer.add(graphic);
+            addedCount++;
+            console.log(`✅ Added graphic ${addedCount} to layer for ${building.name}`);
+            
+          } catch (buildingError) {
+            console.error(`❌ ERROR adding building ${building.name}:`, buildingError);
+          }
         });
 
-        console.log(`Added ${buildingData.length} buildings to map`);
+        // Force layer refresh
+        targetLayer.refresh();
+        console.log('🔄 Layer refreshed');
+        
+        // Move layer to top
+        if (viewRef.current && viewRef.current.map) {
+          viewRef.current.map.reorder(targetLayer, viewRef.current.map.layers.length - 1);
+          console.log('⬆️ Moved layer to top');
+        }
+
+        console.log(`🎉 FINAL RESULT: Added ${addedCount}/${buildingData.length} buildings to map`);
+        console.log(`🎉 FINAL RESULT: Layer now has ${targetLayer.graphics.length} graphics`);
+        console.log(`🎉 FINAL RESULT: Layer visible: ${targetLayer.visible}`);
+
+        // Update the state layer reference if we used a local instance
+        if (layerInstance && !buildingsLayer) {
+          setBuildingsLayer(layerInstance);
+        }
+
+        // Zoom to show all buildings after a short delay
+        setTimeout(() => {
+          if (viewRef.current && targetLayer.graphics.length > 0) {
+            console.log('🔍 Attempting to zoom to buildings...');
+            viewRef.current.goTo(targetLayer.graphics.items).catch(err => {
+              console.log('Could not zoom to buildings:', err);
+            });
+          } else {
+            console.log('❌ Cannot zoom - no graphics or no view');
+          }
+        }, 1000);
+
       } catch (error) {
-        console.error('Error adding buildings to map:', error);
+        console.error('💥 CRITICAL ERROR in addBuildingsToMap:', error);
       }
     };
 
@@ -406,6 +475,7 @@ const SimpleMap = () => {
       if (view) {
         view.destroy();
       }
+      viewRef.current = null;
     };
   }, []);
 
@@ -482,6 +552,14 @@ const SimpleMap = () => {
       const newVisibility = !buildingsVisible;
       buildingsLayer.visible = newVisibility;
       setBuildingsVisible(newVisibility);
+    }
+  };
+
+  const handleZoomToBuildings = () => {
+    if (viewRef.current && buildingsLayer && buildingsLayer.graphics.length > 0) {
+      viewRef.current.goTo(buildingsLayer.graphics.items).catch(err => {
+        console.log('Could not zoom to buildings:', err);
+      });
     }
   };
 
@@ -562,6 +640,24 @@ const SimpleMap = () => {
               Buildings ({buildings.length})
               {loadingBuildings && <span className="loading-indicator"> ⏳</span>}
             </label>
+            {buildings.length > 0 && (
+              <button 
+                onClick={handleZoomToBuildings}
+                style={{
+                  marginTop: '0.5rem',
+                  marginLeft: '1.25rem',
+                  padding: '0.25rem 0.5rem',
+                  fontSize: '0.8rem',
+                  backgroundColor: '#3b82f6',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '4px',
+                  cursor: 'pointer'
+                }}
+              >
+                🔍 Zoom to Buildings
+              </button>
+            )}
           </div>
 
           {/* API Status */}
@@ -574,6 +670,11 @@ const SimpleMap = () => {
             <p className="status-text" style={{ fontSize: '0.7rem', marginTop: '0.25rem' }}>
               Data source: {buildings.length > 3 ? 'Efficy API' : 'Mock data'}
             </p>
+            {buildingsLayer && (
+              <p className="status-text" style={{ fontSize: '0.7rem', marginTop: '0.25rem' }}>
+                Layer: {buildingsLayer.graphics.length} graphics, {buildingsLayer.visible ? 'visible' : 'hidden'}
+              </p>
+            )}
           </div>
         </div>
       )}
