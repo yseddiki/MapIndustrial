@@ -11,7 +11,7 @@ import LoadingOverlay from './LoadingOverlay';
 import ProcessingOverlay from './ProcessingOverlay';
 import LayerControl from './LayerControl';
 
-const MapContainer = () => {
+const MapContainer = ({ selectedAsset }) => {
   const mapContainerRef = useRef(null);
   
   // Custom hooks
@@ -85,9 +85,9 @@ const MapContainer = () => {
         
         // Load building data after map is ready
         setTimeout(async () => {
-          setProcessing(true, 'Getting building data...');
+          setProcessing(true, `Getting ${selectedAsset.name} building data...`);
           try {
-            const buildingData = await loadBuildingData();
+            const buildingData = await loadBuildingData(selectedAsset.queryId);
             if (buildingData.length > 0 && buildingsLayerInstance) {
               setProcessing(true, 'Adding buildings to map...');
               await addBuildingsToMap(buildingData, buildingsLayerInstance);
@@ -107,7 +107,7 @@ const MapContainer = () => {
     };
 
     init();
-  }, []);
+  }, [selectedAsset]);
 
   // Apply filters when they change
   useEffect(() => {

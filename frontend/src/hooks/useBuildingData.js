@@ -36,15 +36,15 @@ export const useBuildingData = () => {
     return counts;
   }, []);
 
-  const loadBuildingData = useCallback(async () => {
+  const loadBuildingData = useCallback(async (queryId = 3618) => {
     setLoadingBuildings(true);
     
     try {
       let buildingData = [];
       
       try {
-        buildingData = await BuildingDataService.fetchBuildings();
-        console.log('✅ API SUCCESS - Loaded buildings from API:', buildingData.length);
+        buildingData = await BuildingDataService.fetchBuildings(queryId);
+        console.log('✅ API SUCCESS - Loaded buildings from API with query', queryId, ':', buildingData.length);
         
         if (buildingData.length === 0) {
           console.warn('⚠️ API returned no buildings, using mock data');

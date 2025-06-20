@@ -27,7 +27,7 @@ export const useMapLayers = () => {
     const cadastreRenderer = new SimpleRenderer({
       symbol: {
         type: "simple-marker",
-        size: 4, // ✅ Small dots (2px) as requested
+        size: 2, // ✅ Small dots (2px) as requested
         color: [128, 128, 128], // ✅ Gray color (128,128,128) as requested
         outline: {
           width: 1,
@@ -169,8 +169,10 @@ export const useMapLayers = () => {
 
           // Create enhanced popup template with quality info
           const popupTemplate = new PopupTemplate({
-            title: `🏢 ${building.name}`,
-            content: createPopupContent(building, qualityInfo)
+            title: `${building.name}`,
+            content: createPopupContent(building, qualityInfo),
+            // Remove all actions except close
+            actions: []
           });
 
           // Create graphic with quality info in attributes

@@ -6,7 +6,7 @@
   --cbre-light-grey: #CAD1D3;
   --cbre-dark-green: #012A2D;
   
-  /* Chart Colors */
+  /* Updated Chart Colors with CBRE Brand */
   --chart-celadon: #80BBAD;
   --chart-wheat: #DBD99A;
   --chart-light-purple: #A388BF;
@@ -740,6 +740,293 @@ html, body, #root {
   font-weight: 500;
   margin: 0;
   min-height: 1.5rem;
+}
+
+/* Welcome Screen Styles */
+.welcome-screen {
+  height: 100vh;
+  width: 100vw;
+  background: linear-gradient(135deg, var(--cbre-dark-green) 0%, var(--cbre-green) 50%, var(--cbre-dark-grey) 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  overflow: hidden;
+  transition: opacity 0.8s ease-out, transform 0.8s ease-out;
+}
+
+.welcome-screen.fade-out {
+  opacity: 0;
+  transform: scale(0.95);
+}
+
+.welcome-container {
+  max-width: 1200px;
+  width: 90%;
+  text-align: center;
+  color: white;
+  z-index: 2;
+}
+
+/* Header Styles */
+.welcome-header {
+  margin-bottom: 3rem;
+}
+
+.cbre-logo {
+  margin-bottom: 2rem;
+}
+
+.logo-circle {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--cbre-accent-green) 0%, var(--chart-celadon) 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto;
+  box-shadow: 0 8px 32px rgba(23, 232, 143, 0.3);
+  animation: logoGlow 2s ease-in-out infinite alternate;
+}
+
+@keyframes logoGlow {
+  0% {
+    box-shadow: 0 8px 32px rgba(23, 232, 143, 0.3);
+    transform: scale(1);
+  }
+  100% {
+    box-shadow: 0 12px 40px rgba(23, 232, 143, 0.5);
+    transform: scale(1.05);
+  }
+}
+
+.logo-text {
+  font-size: 1.5rem;
+  font-weight: 900;
+  color: var(--cbre-dark-green);
+  letter-spacing: 2px;
+}
+
+.welcome-title {
+  font-size: 3rem;
+  font-weight: 700;
+  margin-bottom: 1rem;
+  background: linear-gradient(135deg, var(--cbre-accent-green) 0%, var(--chart-celadon) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  text-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+}
+
+.welcome-subtitle {
+  font-size: 1.2rem;
+  color: var(--cbre-light-grey);
+  font-weight: 300;
+  margin: 0;
+}
+
+/* Asset Selection Styles */
+.asset-selection {
+  margin: 4rem 0;
+}
+
+.asset-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 2rem;
+  margin-top: 2rem;
+}
+
+.asset-card {
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+  border: 2px solid rgba(255, 255, 255, 0.2);
+  border-radius: 16px;
+  padding: 2rem;
+  cursor: pointer;
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
+  min-height: 200px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.asset-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: var(--asset-bg);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  z-index: 1;
+}
+
+.asset-card:hover::before {
+  opacity: 1;
+}
+
+.asset-card:hover {
+  transform: translateY(-8px) scale(1.02);
+  border-color: var(--asset-color);
+  box-shadow: 0 16px 64px rgba(0, 0, 0, 0.3), 
+              0 0 32px var(--asset-color);
+}
+
+.asset-card.selected {
+  transform: translateY(-8px) scale(1.05);
+  border-color: var(--cbre-accent-green);
+  background: rgba(23, 232, 143, 0.2);
+  box-shadow: 0 20px 80px rgba(23, 232, 143, 0.4);
+}
+
+.asset-card * {
+  position: relative;
+  z-index: 2;
+}
+
+.asset-icon {
+  font-size: 3rem;
+  margin-bottom: 1rem;
+  transition: transform 0.3s ease;
+}
+
+.asset-card:hover .asset-icon {
+  transform: scale(1.2) rotate(5deg);
+}
+
+.asset-name {
+  font-size: 1.5rem;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+  color: white;
+  transition: color 0.3s ease;
+}
+
+.asset-card:hover .asset-name {
+  color: var(--asset-color);
+}
+
+.asset-description {
+  font-size: 0.9rem;
+  color: var(--cbre-light-grey);
+  line-height: 1.4;
+  margin: 0;
+  text-align: center;
+}
+
+.asset-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(135deg, var(--asset-color), transparent);
+  opacity: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: opacity 0.3s ease;
+  z-index: 3;
+}
+
+.asset-card:hover .asset-overlay {
+  opacity: 0.9;
+}
+
+.select-text {
+  color: white;
+  font-weight: 600;
+  font-size: 1.1rem;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+}
+
+/* Footer Styles */
+.welcome-footer {
+  margin-top: 3rem;
+}
+
+.powered-by {
+  font-size: 0.9rem;
+  color: var(--cbre-light-grey);
+  margin: 0;
+}
+
+.accent {
+  color: var(--cbre-accent-green);
+  font-weight: 600;
+}
+
+/* Loading Transition */
+.loading-transition {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(1, 42, 45, 0.95);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  z-index: 10;
+}
+
+.loading-spinner-large {
+  width: 80px;
+  height: 80px;
+  border: 6px solid var(--cbre-green);
+  border-top: 6px solid var(--cbre-accent-green);
+  border-radius: 50%;
+  animation: spinLarge 1s linear infinite;
+  margin-bottom: 2rem;
+}
+
+@keyframes spinLarge {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.loading-text {
+  color: white;
+  font-size: 1.2rem;
+  font-weight: 500;
+  margin: 0;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .welcome-title {
+    font-size: 2rem;
+  }
+  
+  .welcome-subtitle {
+    font-size: 1rem;
+  }
+  
+  .asset-grid {
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+  }
+  
+  .asset-card {
+    padding: 1.5rem;
+    min-height: 160px;
+  }
+  
+  .asset-icon {
+    font-size: 2.5rem;
+  }
+  
+  .asset-name {
+    font-size: 1.3rem;
+  }
 }
 
 /* Import ArcGIS CSS */

@@ -70,37 +70,33 @@ export const getQualityColor = (level) => {
   }
 };
 
+
+
+
 export const createPopupContent = (building, qualityInfo) => {
   return `
-    <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.2; color: #2c3e50; font-size: 12px;">
+    <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.4; color: #2c3e50; font-size: 14px; padding: 8px;">
       
-      <!-- Quality Status Header -->
-      <div style="background: linear-gradient(135deg, #003F2D 0%, #012A2D 100%); color: white; padding: 8px; margin: -10px -10px 8px -10px; border-radius: 6px; text-align: center;">
-        <div style="font-size: 18px; margin-bottom: 4px;">${getQualityIcon(qualityInfo.level)}</div>
-        <div style="font-size: 12px; font-weight: bold; color: ${getQualityColor(qualityInfo.level)};">${qualityInfo.label}</div>
+      <!-- Building Name -->
+      <div style="margin-bottom: 12px;">
+        <strong style="color: #003F2D; font-size: 16px;">${building.name || 'N/A'}</strong>
       </div>
 
-      <!-- Property Information -->
-      <div style="background: #f8f9fa; padding: 8px; border-radius: 4px; margin-bottom: 8px;">
-        <h4 style="margin: 0 0 6px 0; color: #003F2D; font-size: 11px; font-weight: bold;">📋 Property Details</h4>
-        <div style="display: grid; grid-template-columns: auto 1fr; gap: 4px; font-size: 11px;">
-          <strong>📍 Address:</strong><span>${building.address || 'N/A'}</span>
-          <strong>🗺️ Coordinates:</strong><span>${building.latitude?.toFixed(4) || 'N/A'}, ${building.longitude?.toFixed(4) || 'N/A'}</span>
-        </div>
+      <!-- Address -->
+      <div style="margin-bottom: 8px;">
+        <strong>📍 Address:</strong> ${building.address || 'N/A'}
       </div>
 
-      <!-- Data Information -->
-      <div style="background: #f8f9fa; padding: 8px; border-radius: 4px; margin-bottom: 8px;">
-        <h4 style="margin: 0 0 6px 0; color: #003F2D; font-size: 11px; font-weight: bold;">📊 Data Information</h4>
-        <div style="display: grid; grid-template-columns: auto 1fr; gap: 4px; font-size: 11px;">
-          <strong>🏛️ Cadastre:</strong><span>${building.F_ARCGIS_ADDRESS || 'Not available'}</span>
-          <strong>📐 Surface:</strong><span>${building.TOTALSURFACE ? building.TOTALSURFACE + ' m²' : 'Not available'}</span>
-          <strong>🏢 Tenants:</strong><span>${building.TENANTS || 'Not available'}</span>
-          <strong>👤 Owner:</strong><span>${building.OWNER || 'Not available'}</span>
-        </div>
+      <!-- Owner -->
+      <div style="margin-bottom: 8px;">
+        <strong>👤 Owner:</strong> ${building.OWNER || 'N/A'}
       </div>
 
-      ${building.propertyId ? `
+      <!-- Tenant -->
+      <div style="margin-bottom: 8px;">
+        <strong>🏢 Tenant:</strong> ${building.TENANTS || 'N/A'}
+      </div>
+        ${building.propertyId ? `
       <!-- CRM Action Button -->
       <div style="text-align: center; margin-top: 8px;">
         <a href="https://efficy.cbre.be/crm/view/Prop/${building.propertyId}" 
@@ -113,9 +109,11 @@ export const createPopupContent = (building, qualityInfo) => {
         </a>
       </div>
       ` : ''}
+
     </div>
   `;
 };
+
 
 export const createCadastrePopupContent = () => {
   return `
@@ -173,6 +171,16 @@ export const createCadastrePopupContent = () => {
       </div>
 
       <script>
+        // Log cadastre details when popup opens
+        console.log('📍 Cadastre point clicked:', {
+          CAPAKEY: '{CAPAKEY}',
+          ADRES: '{ADRES}',
+          GEMEENTE: '{GEMEENTE}',
+          OPPERVL: '{OPPERVL}',
+          AARD: '{AARD}',
+          KADINKO: '{KADINKO}'
+        });
+        
         function createInEfficy() {
           const assetClass = document.getElementById('assetClassDropdown').value;
           if (!assetClass) {
@@ -185,6 +193,14 @@ export const createCadastrePopupContent = () => {
           const address = '{ADRES}';
           const municipality = '{GEMEENTE}';
           const surface = '{OPPERVL}';
+          
+          console.log('🏗️ Creating in Efficy with data:', {
+            capakey,
+            address,
+            municipality,
+            surface,
+            assetClass
+          });
           
           // Construct URL with parameters for creating new property in Efficy
           const efficyUrl = 'https://efficy.cbre.be/crm/view/Prop/new?' + 

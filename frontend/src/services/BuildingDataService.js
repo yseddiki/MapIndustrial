@@ -3,7 +3,7 @@
 import { CONFIG } from '../config/config';
 
 export class BuildingDataService {
-  static async fetchBuildings() {
+  static async fetchBuildings(queryId = 3618) {
     try {
       const response = await fetch(CONFIG.API_ENDPOINTS.EFFICY_CRM, {
         method: "POST",
@@ -20,7 +20,7 @@ export class BuildingDataService {
             "@func": [
               {
                 "@name": "query",
-                key: 3618 // Updated to use the correct query ID
+                key: queryId // Use the passed query ID
               }
             ]
           }
@@ -28,7 +28,7 @@ export class BuildingDataService {
       });
       
       const raw = await response.json();
-      console.log('Raw API response:', raw);
+      console.log('Raw API response for query', queryId, ':', raw);
       const data = raw[0]["@func"][0]['#result']['#data'];
 
       if (!response.ok) {
