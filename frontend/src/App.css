@@ -1,3 +1,22 @@
+/* CBRE Brand Colors */
+:root {
+  --cbre-green: #003F2D;
+  --cbre-dark-grey: #435254;
+  --cbre-accent-green: #17E88F;
+  --cbre-light-grey: #CAD1D3;
+  --cbre-dark-green: #012A2D;
+  
+  /* Chart Colors */
+  --chart-celadon: #80BBAD;
+  --chart-wheat: #DBD99A;
+  --chart-light-purple: #A388BF;
+  --chart-orange: #D2785A;
+  --chart-blue: #1F3765;
+  --chart-red: #AD2A2A;
+  --chart-purple: #885073;
+  --chart-light-blue: #3E7CA6;
+}
+
 * {
   box-sizing: border-box;
   margin: 0;
@@ -31,7 +50,7 @@ html, body, #root {
   left: 0;
   right: 0;
   bottom: 0;
-  background-color: rgba(243, 244, 246, 0.9);
+  background-color: rgba(1, 42, 45, 0.95);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -40,7 +59,7 @@ html, body, #root {
 
 .loading-content {
   text-align: center;
-  color: #374151;
+  color: white;
 }
 
 .loading-content p {
@@ -52,8 +71,8 @@ html, body, #root {
 .spinner {
   width: 40px;
   height: 40px;
-  border: 4px solid #e5e7eb;
-  border-top: 4px solid #3b82f6;
+  border: 4px solid var(--cbre-green);
+  border-top: 4px solid var(--cbre-accent-green);
   border-radius: 50%;
   animation: spin 1s linear infinite;
   margin: 0 auto;
@@ -71,43 +90,45 @@ html, body, #root {
   display: flex;
   align-items: center;
   justify-content: center;
-  background-color: #f3f4f6;
+  background-color: var(--cbre-dark-green);
 }
 
 .error-content {
   text-align: center;
   padding: 2rem;
-  background: white;
+  background: var(--cbre-dark-grey);
+  border: 2px solid var(--cbre-green);
   border-radius: 8px;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
   max-width: 400px;
 }
 
 .error-content h2 {
-  color: #dc2626;
+  color: var(--chart-red);
   margin-bottom: 1rem;
   font-size: 1.5rem;
 }
 
 .error-content p {
-  color: #6b7280;
+  color: var(--cbre-light-grey);
   margin-bottom: 1.5rem;
   line-height: 1.5;
 }
 
 .error-content button {
-  background-color: #3b82f6;
-  color: white;
+  background-color: var(--cbre-accent-green);
+  color: var(--cbre-dark-green);
   border: none;
   padding: 0.75rem 1.5rem;
   border-radius: 6px;
   cursor: pointer;
   font-size: 1rem;
+  font-weight: 600;
   transition: background-color 0.2s;
 }
 
 .error-content button:hover {
-  background-color: #2563eb;
+  background-color: var(--chart-celadon);
 }
 
 /* Layer Control Panel */
@@ -115,26 +136,37 @@ html, body, #root {
   position: absolute;
   top: 20px;
   right: 20px;
-  background: white;
+  background: var(--cbre-dark-green);
+  color: white;
   padding: 1rem;
   border-radius: 8px;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-  min-width: 220px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+  border: 2px solid var(--cbre-green);
+  min-width: 280px;
+  max-width: 320px;
   z-index: 1000;
+  max-height: 80vh;
+  overflow-y: auto;
+}
+
+.layer-control.processing {
+  opacity: 0.7;
+  pointer-events: none;
 }
 
 .layer-control h3 {
   margin: 0 0 1rem 0;
   font-size: 1rem;
-  color: #374151;
-  border-bottom: 1px solid #e5e7eb;
+  color: var(--cbre-accent-green);
+  border-bottom: 1px solid var(--cbre-green);
   padding-bottom: 0.5rem;
+  font-weight: 600;
 }
 
 .layer-item {
   margin-bottom: 1rem;
   padding-bottom: 0.75rem;
-  border-bottom: 1px solid #f3f4f6;
+  border-bottom: 1px solid var(--cbre-green);
 }
 
 .layer-item:last-of-type {
@@ -148,7 +180,7 @@ html, body, #root {
   margin-bottom: 0.5rem;
   cursor: pointer;
   font-size: 0.9rem;
-  color: #374151;
+  color: white;
   font-weight: 500;
 }
 
@@ -162,7 +194,7 @@ html, body, #root {
 }
 
 .opacity-control {
-  margin-left: 1.25rem;
+  margin-left: 0rem;
   margin-top: 0.5rem;
 }
 
@@ -204,6 +236,460 @@ html, body, #root {
 
 .esri-popup__content strong {
   color: #374151;
+}
+
+/* Enhanced popup styling */
+.esri-popup .esri-popup__main-container {
+  max-width: 400px;
+}
+
+.esri-popup__content {
+  padding: 0 !important;
+}
+
+.esri-popup__header .esri-popup__header-title {
+  font-size: 18px;
+  font-weight: bold;
+  color: var(--cbre-green);
+}
+
+/* CRM button hover effect */
+.esri-popup__content a[href*="efficy.cbre.be"]:hover {
+  background: linear-gradient(135deg, #00C896 0%, #17E88F 100%) !important;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 12px rgba(23, 232, 143, 0.4) !important;
+}
+
+/* Modal Styles */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(1, 42, 45, 0.8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10000;
+  backdrop-filter: blur(3px);
+}
+
+.modal-content {
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
+  max-width: 600px;
+  width: 90%;
+  max-height: 80vh;
+  overflow: hidden;
+  border: 2px solid var(--cbre-green);
+}
+
+.modal-header {
+  background: linear-gradient(135deg, var(--cbre-green) 0%, var(--cbre-dark-green) 100%);
+  color: white;
+  padding: 1rem 1.5rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.modal-header h3 {
+  margin: 0;
+  font-size: 1.2rem;
+  font-weight: 600;
+}
+
+.modal-close {
+  background: none;
+  border: none;
+  color: white;
+  font-size: 1.5rem;
+  cursor: pointer;
+  padding: 0.25rem;
+  border-radius: 4px;
+  transition: background-color 0.2s;
+}
+
+.modal-close:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.modal-body {
+  padding: 1.5rem;
+  max-height: 60vh;
+  overflow-y: auto;
+}
+
+.modal-section {
+  margin-bottom: 1.5rem;
+  padding: 1rem;
+  background: #f8f9fa;
+  border-radius: 8px;
+  border-left: 4px solid var(--cbre-accent-green);
+}
+
+.modal-section:last-child {
+  margin-bottom: 0;
+}
+
+.modal-section h4 {
+  margin: 0 0 1rem 0;
+  color: var(--cbre-green);
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.data-grid {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.data-row {
+  display: grid;
+  grid-template-columns: 1fr 2fr;
+  gap: 1rem;
+  padding: 0.5rem 0;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.data-row:last-child {
+  border-bottom: none;
+}
+
+.data-row strong {
+  color: var(--cbre-dark-grey);
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+.data-row span {
+  color: #374151;
+  font-size: 0.9rem;
+}
+
+.asset-class-section {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.asset-class-label {
+  font-weight: 600;
+  color: var(--cbre-dark-grey);
+  font-size: 0.9rem;
+}
+
+.asset-class-dropdown {
+  padding: 0.75rem;
+  border: 2px solid var(--cbre-light-grey);
+  border-radius: 6px;
+  font-size: 0.9rem;
+  background: white;
+  color: var(--cbre-dark-grey);
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.asset-class-dropdown:focus {
+  outline: none;
+  border-color: var(--cbre-accent-green);
+  box-shadow: 0 0 0 3px rgba(23, 232, 143, 0.1);
+}
+
+.modal-footer {
+  padding: 1rem 1.5rem;
+  background: #f8f9fa;
+  border-top: 1px solid #e5e7eb;
+  display: flex;
+  gap: 1rem;
+  justify-content: flex-end;
+}
+
+.modal-btn {
+  padding: 0.75rem 1.5rem;
+  border: none;
+  border-radius: 25px;
+  font-weight: 600;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.modal-btn-secondary {
+  background: var(--cbre-light-grey);
+  color: var(--cbre-dark-grey);
+}
+
+.modal-btn-secondary:hover {
+  background: var(--cbre-dark-grey);
+  color: white;
+}
+
+.modal-btn-primary {
+  background: linear-gradient(135deg, var(--cbre-accent-green) 0%, #00C896 100%);
+  color: var(--cbre-dark-green);
+}
+
+.modal-btn-primary:hover {
+  background: linear-gradient(135deg, #00C896 0%, var(--cbre-accent-green) 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 12px rgba(23, 232, 143, 0.3);
+}
+
+/* Data Quality Legend styles */
+.quality-legend {
+  margin-left: 0.5rem;
+}
+
+.quality-item {
+  display: flex;
+  align-items: center;
+  margin-bottom: 0.25rem;
+}
+
+.quality-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  border: none;
+  box-shadow: 0 0 0 1px rgba(255,255,255,0.3);
+  margin-right: 0.5rem;
+  flex-shrink: 0;
+}
+
+.quality-label {
+  font-size: 0.8rem;
+  color: white;
+  font-weight: 500;
+  transition: font-weight 0.2s ease;
+}
+
+.legend-title {
+  font-size: 0.9rem;
+  margin: 0 0 0.5rem 0;
+  color: #374151;
+  font-weight: 600;
+  border-bottom: 1px solid #e5e7eb;
+  padding-bottom: 0.25rem;
+}
+
+/* Search and Filter Components */
+.section-title {
+  font-size: 0.9rem;
+  margin: 0 0 0.5rem 0;
+  color: var(--cbre-accent-green);
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.filter-count {
+  font-size: 0.8rem;
+  color: var(--cbre-light-grey);
+  font-weight: normal;
+}
+
+.search-container {
+  position: relative;
+  margin-bottom: 0.5rem;
+}
+
+.search-input {
+  width: 100%;
+  padding: 0.5rem 0.75rem;
+  padding-right: 2rem;
+  border: 1px solid var(--cbre-green);
+  border-radius: 6px;
+  font-size: 0.9rem;
+  background: var(--cbre-dark-grey);
+  color: white;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.search-input::placeholder {
+  color: var(--cbre-light-grey);
+}
+
+.search-input:focus {
+  outline: none;
+  border-color: var(--cbre-accent-green);
+  box-shadow: 0 0 0 3px rgba(23, 232, 143, 0.1);
+}
+
+.clear-search-btn {
+  position: absolute;
+  right: 0.5rem;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  color: var(--cbre-light-grey);
+  cursor: pointer;
+  font-size: 0.9rem;
+  padding: 0.25rem;
+  border-radius: 3px;
+  transition: all 0.2s;
+}
+
+.clear-search-btn:hover {
+  background: var(--cbre-green);
+  color: white;
+}
+
+.search-results {
+  font-size: 0.8rem;
+  color: var(--cbre-light-grey);
+  margin: 0;
+  font-style: italic;
+}
+
+.filter-controls {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 0.75rem;
+}
+
+.filter-btn {
+  flex: 1;
+  padding: 0.25rem 0.5rem;
+  font-size: 0.8rem;
+  background: var(--cbre-green);
+  color: white;
+  border: 1px solid var(--cbre-accent-green);
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.filter-btn:hover {
+  background: var(--cbre-accent-green);
+  border-color: var(--cbre-accent-green);
+  color: var(--cbre-dark-green);
+}
+
+.filter-btn:active {
+  background: var(--cbre-dark-grey);
+}
+
+.quality-filters {
+  margin: 0;
+}
+
+.quality-filter-item {
+  margin-bottom: 0.5rem;
+}
+
+.quality-filter-item:last-child {
+  margin-bottom: 0;
+}
+
+.quality-filter-item label {
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  padding: 0.25rem;
+  border-radius: 4px;
+  transition: background-color 0.2s;
+  margin-bottom: 0;
+}
+
+.quality-filter-item label:hover {
+  background: #f9fafb;
+}
+
+.quality-filter-item input[type="checkbox"] {
+  margin-right: 0.5rem;
+  cursor: pointer;
+}
+
+.action-btn {
+  width: 100%;
+  padding: 0.5rem;
+  font-size: 0.9rem;
+  background: #3b82f6;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  font-weight: 500;
+}
+
+.action-btn:hover {
+  background: #2563eb;
+}
+
+.action-btn:active {
+  background: #1d4ed8;
+}
+
+/* Scrollbar styling for the control panel */
+.layer-control::-webkit-scrollbar {
+  width: 6px;
+}
+
+.layer-control::-webkit-scrollbar-track {
+  background: #f1f5f9;
+  border-radius: 3px;
+}
+
+.layer-control::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 3px;
+}
+
+.layer-control::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+/* Processing Overlay */
+.processing-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(1, 42, 45, 0.8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2000;
+  backdrop-filter: blur(2px);
+}
+
+.processing-content {
+  background: var(--cbre-dark-green);
+  border: 2px solid var(--cbre-green);
+  padding: 2rem;
+  border-radius: 12px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+  text-align: center;
+  min-width: 280px;
+}
+
+.processing-spinner {
+  width: 48px;
+  height: 48px;
+  border: 4px solid var(--cbre-green);
+  border-top: 4px solid var(--cbre-accent-green);
+  border-radius: 50%;
+  animation: processingSpinFast 0.8s linear infinite;
+  margin: 0 auto 1.5rem auto;
+}
+
+@keyframes processingSpinFast {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.processing-text {
+  font-size: 1rem;
+  color: white;
+  font-weight: 500;
+  margin: 0;
+  min-height: 1.5rem;
 }
 
 /* Import ArcGIS CSS */
