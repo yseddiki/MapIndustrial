@@ -144,6 +144,11 @@ const LayerControl = ({
                 Not in Efficy ! ({qualityDistribution.GREY})
               </span>
             </label>
+            {qualityFilters.GREY && (
+              <div style={{ fontSize: '0.7rem', color: '#9CA3AF', marginLeft: '1.5rem', marginTop: '0.25rem' }}>
+                📊 Loading many cadastre points...
+              </div>
+            )}
           </div>
         </div>
       </div>

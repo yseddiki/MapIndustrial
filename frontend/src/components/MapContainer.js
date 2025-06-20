@@ -1,6 +1,7 @@
 // src/components/MapContainer.js
 
 import React, { useRef, useEffect } from 'react';
+import { useArcGISAPI } from '../hooks/useArcGISAPI';
 import { useMap } from '../hooks/useMap';
 import { useMapLayers } from '../hooks/useMapLayers';
 import { useBuildingData } from '../hooks/useBuildingData';
@@ -14,6 +15,12 @@ const MapContainer = () => {
   const mapContainerRef = useRef(null);
   
   // Custom hooks
+  const {
+    isLoaded: isArcGISLoaded,
+    error: arcgisError,
+    loadArcGISAPI
+  } = useArcGISAPI();
+
   const {
     isMapReady,
     error,
@@ -61,9 +68,15 @@ const MapContainer = () => {
   useEffect(() => {
     const init = async () => {
       try {
+        setProcessing(true, 'Loading ArcGIS API...');
+        
+        // First, ensure ArcGIS API is loaded
+        await loadArcGISAPI();
+        
         setProcessing(true, 'Initializing map...');
         
-        // Create layers first
+        // Now create layers after ArcGIS API is confirmed loaded
+        setProcessing(true, 'Creating map layers...');
         const cadastre = await createCadastreLayer();
         const buildingsLayerInstance = await createBuildingsLayer();
         
@@ -111,6 +124,12 @@ const MapContainer = () => {
         calculateQualityDistribution(filteredBuildings);
 
         // Control cadastre layer visibility based on GREY filter
+        console.log(`🟫 GREY filter state: ${qualityFilters.GREY}`);
+        if (qualityFilters.GREY) {
+          console.log('👁️ User enabled "Not in Efficy" - showing cadastre layer');
+        } else {
+          console.log('🙈 User disabled "Not in Efficy" - hiding cadastre layer');
+        }
         updateCadastreVisibility(qualityFilters.GREY);
 
         setProcessing(false);
@@ -120,10 +139,10 @@ const MapContainer = () => {
     }
   }, [qualityFilters, searchTerm, allBuildings, buildingsLayer]);
 
-  if (error) {
+  if (error || arcgisError) {
     return (
       <ErrorContainer
-        error={error}
+        error={error || arcgisError}
         onRetry={handleRetry}
         onTryDifferentBasemap={handleTryDifferentBasemap}
       />

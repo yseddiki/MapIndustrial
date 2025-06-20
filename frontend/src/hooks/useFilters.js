@@ -10,7 +10,7 @@ export const useFilters = () => {
     ORANGE: true,
     RED: true,
     PURPLE: true,
-    GREY: true
+    GREY: false // Start with cadastre layer hidden for performance
   });
   
   const [searchTerm, setSearchTerm] = useState('');
