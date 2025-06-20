@@ -23,15 +23,15 @@ export const useMapLayers = () => {
       }, reject);
     });
 
-    // Create custom renderer for larger grey dots
+    // Create custom renderer for small gray dots
     const cadastreRenderer = new SimpleRenderer({
       symbol: {
         type: "simple-marker",
-        size: 8, // Bigger dots (8px)
-        color: [202, 209, 211], // Grey color #CAD1D3
+        size: 2, // ✅ Small dots (2px) as requested
+        color: [128, 128, 128], // ✅ Gray color (128,128,128) as requested
         outline: {
           width: 1,
-          color: [202, 209, 211] // Grey outline
+          color: [128, 128, 128] // Gray outline
         }
       }
     });
