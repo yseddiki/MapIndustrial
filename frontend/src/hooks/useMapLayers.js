@@ -27,7 +27,7 @@ export const useMapLayers = () => {
     const cadastreRenderer = new SimpleRenderer({
       symbol: {
         type: "simple-marker",
-        size: 2, // ✅ Small dots (2px) as requested
+        size: 4, // ✅ Small dots (2px) as requested
         color: [128, 128, 128], // ✅ Gray color (128,128,128) as requested
         outline: {
           width: 1,
