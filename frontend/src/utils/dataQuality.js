@@ -73,7 +73,7 @@ export const getQualityColor = (level) => {
 
 
 
-export const createPopupContent = (building, qualityInfo) => {
+export const createPopupContent = (building) => {
   return `
     <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.4; color: #2c3e50; font-size: 14px; padding: 8px;">
       

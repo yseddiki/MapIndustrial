@@ -139,6 +139,11 @@ export const useMap = (mapContainerRef) => {
         center: CONFIG.MAP.CENTER,
         zoom: CONFIG.MAP.ZOOM
       });
+      
+      // Set popup behavior on the view
+      view.popup.dockEnabled = false;
+      view.popup.collapseEnabled = false;
+
 
       view.when(() => {
         setIsMapReady(true);
