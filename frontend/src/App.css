@@ -213,12 +213,12 @@ html, body, #root {
 .api-status {
   margin-top: 0.75rem;
   padding-top: 0.75rem;
-  border-top: 1px solid #e5e7eb;
+  border-top: 1px solid var(--cbre-green);
 }
 
 .status-text {
   font-size: 0.8rem;
-  color: #6b7280;
+  color: var(--cbre-light-grey);
   margin: 0;
   display: flex;
   align-items: center;
@@ -437,6 +437,49 @@ html, body, #root {
   box-shadow: 0 6px 12px rgba(23, 232, 143, 0.3);
 }
 
+/* Debug data styling */
+.debug-field {
+  font-family: 'Courier New', monospace;
+  font-size: 11px;
+  background: #f1f3f4;
+  padding: 2px 4px;
+  border-radius: 3px;
+  margin: 1px 0;
+}
+
+.debug-value {
+  color: #1a73e8;
+  font-weight: normal;
+}
+
+.debug-null {
+  color: #dc3545;
+  font-style: italic;
+}
+
+/* Enhanced action button */
+.action-btn {
+  width: 100%;
+  padding: 0.5rem;
+  font-size: 0.9rem;
+  background: var(--cbre-accent-green);
+  color: var(--cbre-dark-green);
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  font-weight: 600;
+}
+
+.action-btn:hover {
+  background: var(--chart-celadon);
+}
+
+.action-btn:active {
+  background: var(--cbre-green);
+  color: white;
+}
+
 /* Data Quality Legend styles */
 .quality-legend {
   margin-left: 0.5rem;
@@ -591,17 +634,24 @@ html, body, #root {
   cursor: pointer;
   padding: 0.25rem;
   border-radius: 4px;
-  transition: background-color 0.2s;
+  transition: transform 0.2s ease;
   margin-bottom: 0;
 }
 
 .quality-filter-item label:hover {
-  background: #f9fafb;
+  transform: scale(1.05);
+  background: none;
+}
+
+.quality-filter-item label:hover .quality-label {
+  font-weight: 600;
+  background: none;
 }
 
 .quality-filter-item input[type="checkbox"] {
   margin-right: 0.5rem;
   cursor: pointer;
+  accent-color: var(--cbre-accent-green);
 }
 
 .action-btn {

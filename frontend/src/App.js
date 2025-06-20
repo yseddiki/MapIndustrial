@@ -518,100 +518,13 @@ const SimpleMap = () => {
           }
         });
 
-        // Create popup template for cadastre points
-        const cadastrePopupTemplate = {
-          title: "📍 Cadastre Property",
-          content: `
-            <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.2; color: #2c3e50; font-size: 12px;">
-              
-              <!-- Quality Status Header -->
-              <div style="background: linear-gradient(135deg, #003F2D 0%, #012A2D 100%); color: white; padding: 8px; margin: -10px -10px 8px -10px; border-radius: 6px; text-align: center;">
-                <div style="font-size: 18px; margin-bottom: 4px;">📍</div>
-                <div style="font-size: 12px; font-weight: bold; color: #CAD1D3;">Not in Efficy ! (From cadastre)</div>
-              </div>
-
-              <!-- Cadastre Information -->
-              <div style="background: #f8f9fa; padding: 8px; border-radius: 4px; margin-bottom: 8px;">
-                <h4 style="margin: 0 0 6px 0; color: #003F2D; font-size: 11px; font-weight: bold;">🏛️ Cadastre Details</h4>
-                <div style="display: grid; grid-template-columns: auto 1fr; gap: 4px; font-size: 11px;">
-                  <strong>📋 Cadastre ID:</strong><span>{CAPAKEY}</span>
-                  <strong>📍 Address:</strong><span>{ADRES}</span>
-                  <strong>🏘️ Municipality:</strong><span>{GEMEENTE}</span>
-                  <strong>📐 Surface:</strong><span>{OPPERVL} m²</span>
-                  <strong>🏢 Nature:</strong><span>{AARD}</span>
-                  <strong>💰 Cadastral Income:</strong><span>€{KADINKO}</span>
-                </div>
-              </div>
-
-              <!-- Asset Class Selection -->
-              <div style="background: #f8f9fa; padding: 8px; border-radius: 4px; margin-bottom: 8px;">
-                <h4 style="margin: 0 0 6px 0; color: #003F2D; font-size: 11px; font-weight: bold;">🏗️ Create in Efficy</h4>
-                <div style="margin-bottom: 6px;">
-                  <label style="font-size: 11px; font-weight: bold; color: #435254;">Detailed Asset Class:</label>
-                  <select id="assetClassDropdown" style="width: 100%; padding: 4px; margin-top: 2px; border: 1px solid #CAD1D3; border-radius: 3px; font-size: 11px; background: white;">
-                    <option value="">Select Asset Class...</option>
-                    <option value="office">Office</option>
-                    <option value="retail">Retail</option>
-                    <option value="industrial">Industrial</option>
-                    <option value="residential">Residential</option>
-                    <option value="hotel">Hotel</option>
-                    <option value="healthcare">Healthcare</option>
-                    <option value="education">Education</option>
-                    <option value="mixed-use">Mixed Use</option>
-                    <option value="land">Land</option>
-                    <option value="other">Other</option>
-                  </select>
-                </div>
-              </div>
-
-              <!-- Create Button -->
-              <div style="text-align: center; margin-top: 8px;">
-                <button onclick="createInEfficy()" 
-                   style="display: inline-block; background: linear-gradient(135deg, #17E88F 0%, #00C896 100%); 
-                          color: #003F2D; padding: 8px 16px; border: none; border-radius: 20px; 
-                          font-weight: bold; font-size: 11px; box-shadow: 0 3px 6px rgba(23, 232, 143, 0.3); 
-                          transition: all 0.3s ease; cursor: pointer;">
-                  🏗️ Create in Efficy
-                </button>
-              </div>
-
-              <script>
-                function createInEfficy() {
-                  const assetClass = document.getElementById('assetClassDropdown').value;
-                  if (!assetClass) {
-                    alert('Please select an Asset Class first!');
-                    return;
-                  }
-                  
-                  // Get cadastre details from the popup
-                  const capakey = '{CAPAKEY}';
-                  const address = '{ADRES}';
-                  const municipality = '{GEMEENTE}';
-                  const surface = '{OPPERVL}';
-                  
-                  // Construct URL with parameters for creating new property in Efficy
-                  const efficyUrl = 'https://efficy.cbre.be/crm/view/Prop/new?' + 
-                    'capakey=' + encodeURIComponent(capakey) +
-                    '&address=' + encodeURIComponent(address) +
-                    '&municipality=' + encodeURIComponent(municipality) +
-                    '&surface=' + encodeURIComponent(surface) +
-                    '&assetClass=' + encodeURIComponent(assetClass);
-                  
-                  window.open(efficyUrl, '_blank');
-                }
-              </script>
-            </div>
-          `
-        };
-
         // Create the CBRE Belgium Cadastre layer as FeatureLayer
         const cadastreLayerInstance = new FeatureLayer({
           url: 'https://arcgiscenter.cbre.eu/arcgis/rest/services/Belgium/Cadastre/MapServer/2',
           title: 'Belgium Cadastre',
           opacity: 1,
           visible: true,
-          renderer: cadastreRenderer,
-          popupTemplate: cadastrePopupTemplate
+          renderer: cadastreRenderer // Apply custom symbology
         });
 
         // Create buildings layer
@@ -794,12 +707,6 @@ const SimpleMap = () => {
       await addBuildingsToMap(filteredBuildings, buildingsLayer, false);
       setBuildings(filteredBuildings);
 
-      // Control cadastre layer visibility based on GREY filter
-      if (cadastreLayer) {
-        cadastreLayer.visible = qualityFilters.GREY;
-        console.log('🟫 Cadastre layer visibility:', qualityFilters.GREY);
-      }
-
     } catch (error) {
       console.error('Error applying filters:', error);
     } finally {
@@ -845,100 +752,13 @@ const SimpleMap = () => {
           }
         });
 
-        // Create popup template for cadastre points
-        const cadastrePopupTemplate = {
-          title: "📍 Cadastre Property",
-          content: `
-            <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.2; color: #2c3e50; font-size: 12px;">
-              
-              <!-- Quality Status Header -->
-              <div style="background: linear-gradient(135deg, #003F2D 0%, #012A2D 100%); color: white; padding: 8px; margin: -10px -10px 8px -10px; border-radius: 6px; text-align: center;">
-                <div style="font-size: 18px; margin-bottom: 4px;">📍</div>
-                <div style="font-size: 12px; font-weight: bold; color: #CAD1D3;">Not in Efficy ! (From cadastre)</div>
-              </div>
-
-              <!-- Cadastre Information -->
-              <div style="background: #f8f9fa; padding: 8px; border-radius: 4px; margin-bottom: 8px;">
-                <h4 style="margin: 0 0 6px 0; color: #003F2D; font-size: 11px; font-weight: bold;">🏛️ Cadastre Details</h4>
-                <div style="display: grid; grid-template-columns: auto 1fr; gap: 4px; font-size: 11px;">
-                  <strong>📋 Cadastre ID:</strong><span>{CAPAKEY}</span>
-                  <strong>📍 Address:</strong><span>{ADRES}</span>
-                  <strong>🏘️ Municipality:</strong><span>{GEMEENTE}</span>
-                  <strong>📐 Surface:</strong><span>{OPPERVL} m²</span>
-                  <strong>🏢 Nature:</strong><span>{AARD}</span>
-                  <strong>💰 Cadastral Income:</strong><span>€{KADINKO}</span>
-                </div>
-              </div>
-
-              <!-- Asset Class Selection -->
-              <div style="background: #f8f9fa; padding: 8px; border-radius: 4px; margin-bottom: 8px;">
-                <h4 style="margin: 0 0 6px 0; color: #003F2D; font-size: 11px; font-weight: bold;">🏗️ Create in Efficy</h4>
-                <div style="margin-bottom: 6px;">
-                  <label style="font-size: 11px; font-weight: bold; color: #435254;">Detailed Asset Class:</label>
-                  <select id="assetClassDropdown" style="width: 100%; padding: 4px; margin-top: 2px; border: 1px solid #CAD1D3; border-radius: 3px; font-size: 11px; background: white;">
-                    <option value="">Select Asset Class...</option>
-                    <option value="office">Office</option>
-                    <option value="retail">Retail</option>
-                    <option value="industrial">Industrial</option>
-                    <option value="residential">Residential</option>
-                    <option value="hotel">Hotel</option>
-                    <option value="healthcare">Healthcare</option>
-                    <option value="education">Education</option>
-                    <option value="mixed-use">Mixed Use</option>
-                    <option value="land">Land</option>
-                    <option value="other">Other</option>
-                  </select>
-                </div>
-              </div>
-
-              <!-- Create Button -->
-              <div style="text-align: center; margin-top: 8px;">
-                <button onclick="createInEfficy()" 
-                   style="display: inline-block; background: linear-gradient(135deg, #17E88F 0%, #00C896 100%); 
-                          color: #003F2D; padding: 8px 16px; border: none; border-radius: 20px; 
-                          font-weight: bold; font-size: 11px; box-shadow: 0 3px 6px rgba(23, 232, 143, 0.3); 
-                          transition: all 0.3s ease; cursor: pointer;">
-                  🏗️ Create in Efficy
-                </button>
-              </div>
-
-              <script>
-                function createInEfficy() {
-                  const assetClass = document.getElementById('assetClassDropdown').value;
-                  if (!assetClass) {
-                    alert('Please select an Asset Class first!');
-                    return;
-                  }
-                  
-                  // Get cadastre details from the popup
-                  const capakey = '{CAPAKEY}';
-                  const address = '{ADRES}';
-                  const municipality = '{GEMEENTE}';
-                  const surface = '{OPPERVL}';
-                  
-                  // Construct URL with parameters for creating new property in Efficy
-                  const efficyUrl = 'https://efficy.cbre.be/crm/view/Prop/new?' + 
-                    'capakey=' + encodeURIComponent(capakey) +
-                    '&address=' + encodeURIComponent(address) +
-                    '&municipality=' + encodeURIComponent(municipality) +
-                    '&surface=' + encodeURIComponent(surface) +
-                    '&assetClass=' + encodeURIComponent(assetClass);
-                  
-                  window.open(efficyUrl, '_blank');
-                }
-              </script>
-            </div>
-          `
-        };
-
         // Create the CBRE Belgium Cadastre layer as FeatureLayer
         const cadastreLayer = new FeatureLayer({
           url: 'https://arcgiscenter.cbre.eu/arcgis/rest/services/Belgium/Cadastre/MapServer/2',
           title: 'Belgium Cadastre',
           opacity: 1,
           visible: true,
-          renderer: cadastreRenderer,
-          popupTemplate: cadastrePopupTemplate
+          renderer: cadastreRenderer
         });
 
         const map = new Map({
