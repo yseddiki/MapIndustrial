@@ -1,4 +1,4 @@
-// src/config/config.js
+// src/config/config.js - FIXED VERSION
 
 export const CONFIG = {
   API_ENDPOINTS: {
@@ -15,7 +15,7 @@ export const CONFIG = {
   ARCGIS: {
     API_URL: 'https://js.arcgis.com/4.28/',
     CSS_URL: 'https://js.arcgis.com/4.28/esri/themes/light/main.css',
-    // ✅ UPDATED: Use MapServer instead of FeatureServer as requested
-    CADASTRE_LAYER_URL: 'https://arcgiscenter.cbre.eu/arcgis/rest/services/Belgium/Cadastre/MapServer/2'
+    // ✅ FIXED: Use FeatureServer instead of MapServer for proper data access
+    CADASTRE_LAYER_URL: 'https://arcgiscenter.cbre.eu/arcgis/rest/services/Belgium/Cadastre/FeatureServer/2'
   }
 };

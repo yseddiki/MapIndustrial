@@ -5,8 +5,8 @@ import React from 'react';
 const LayerControl = ({
   isProcessing,
   searchTerm,
-  searchInput, // ✅ V2 UPDATE: What user is currently typing
-  isSearching, // ✅ V2 UPDATE: Whether search is pending
+  searchInput,
+  isSearching,
   onSearchChange,
   onClearSearch,
   buildings,
@@ -30,7 +30,7 @@ const LayerControl = ({
           <input
             type="text"
             placeholder="Search by name, address, ID..."
-            value={searchInput} // ✅ V2 UPDATE: Use searchInput (what user is typing)
+            value={searchInput}
             onChange={onSearchChange}
             className="search-input"
           />
@@ -40,7 +40,6 @@ const LayerControl = ({
             </button>
           )}
         </div>
-        {/* ✅ V2 UPDATE: Show search status */}
         {isSearching && searchInput && (
           <p className="search-results" style={{ color: '#DBD99A', fontStyle: 'italic' }}>
             ⏳ Searching...
@@ -147,7 +146,6 @@ const LayerControl = ({
                 checked={qualityFilters.GREY}
                 onChange={() => onQualityFilterToggle('GREY')}
               />
-              {/* ✅ V2 UPDATE: White dot with black border for "Not in Efficy" */}
               <div className="quality-dot" style={{ 
                 backgroundColor: '#FFFFFF', 
                 border: '1px solid #000000',
@@ -158,8 +156,14 @@ const LayerControl = ({
               </span>
             </label>
             {qualityFilters.GREY && (
-              <div style={{ fontSize: '0.7rem', color: '#9CA3AF', marginLeft: '1.5rem', marginTop: '0.25rem' }}>
-                📊 Loading many cadastre points...
+              <div style={{ 
+                fontSize: '0.7rem', 
+                color: '#17E88F', 
+                marginLeft: '1.5rem', 
+                marginTop: '0.25rem',
+                fontWeight: '500'
+              }}>
+                💡 Click any white dot to view details and create property
               </div>
             )}
           </div>

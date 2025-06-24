@@ -1,19 +1,18 @@
-// src/services/CadastreService.js
+// src/services/CadastreService.js - FIXED VERSION
 
 export class CadastreService {
-  static CADASTRE_BASE_URL = 'https://arcgiscenter.cbre.eu/arcgis/rest/services/Belgium/Cadastre/MapServer';
-  static SUBMARKET_BASE_URL = 'https://arcgiscenter.cbre.eu/arcgis/rest/services/Hosted/Submarkets_Arrondissements_Provinces/FeatureServer';
+  // ✅ SIMPLIFIED: Use correct URL structure for FeatureServer endpoints (cadastre only)
+  static CADASTRE_BASE_URL = 'https://arcgiscenter.cbre.eu/arcgis/rest/services/Belgium/Cadastre/FeatureServer';
   
-  // ✅ UPDATED: Layer endpoints using MapServer instead of FeatureServer
+  // ✅ UPDATED: Layer endpoints using FeatureServer for cadastre layers only
   static LAYERS = {
     PARCELS: `${this.CADASTRE_BASE_URL}/0`,      // Parcel data
     BUILDINGS: `${this.CADASTRE_BASE_URL}/1`,    // Building data  
-    POINTS: `${this.CADASTRE_BASE_URL}/2`,       // Point data (what we click on)
-    SUBMARKETS: `${this.SUBMARKET_BASE_URL}/0`   // Submarket data (still FeatureServer)
+    POINTS: `${this.CADASTRE_BASE_URL}/2`        // Point data (what we click on)
   };
 
   /**
-   * Fetch comprehensive cadastre data when a point is clicked (matches Efficy backend pattern)
+   * Fetch comprehensive cadastre data when a point is clicked (simplified - no submarket)
    * @param {string} pointGuid - The GUID from the clicked cadastre point
    * @returns {Promise<Object>} - Combined cadastre data
    */
@@ -28,18 +27,17 @@ export class CadastreService {
         point: pointData,
         buildings: [],
         parcel: null,
-        submarket: null,
         errors: []
       };
 
       if (pointData) {
-        // Step 2: Get building data if building_guid exists (matches your backend logic)
+        // Step 2: Get building data if building_guid exists
         if (pointData.building_guid) {
           try {
-            const buildingData = await this.queryBuildingDataByGuid(pointData.building_guid);
+            const buildingData = await this.queryBuildingData(pointData.building_guid);
             result.buildings = buildingData;
             
-            // Step 3: Get parcel data using building's parcel_guid (matches your backend)
+            // Step 3: Get parcel data using building's parcel_guid
             if (buildingData.length > 0 && buildingData[0].parcel_guid) {
               try {
                 const parcelData = await this.queryParcelData(buildingData[0].parcel_guid);
@@ -52,19 +50,9 @@ export class CadastreService {
             result.errors.push(`Building data: ${error.message}`);
           }
         }
-
-        // Step 4: Get submarket data using coordinates (matches your backend)
-        if (pointData.x && pointData.y) {
-          try {
-            const submarketData = await this.querySubmarketData(pointData.x, pointData.y);
-            result.submarket = submarketData;
-          } catch (error) {
-            result.errors.push(`Submarket data: ${error.message}`);
-          }
-        }
       }
 
-      console.log('📊 Cadastre data fetched (Efficy pattern):', result);
+      console.log('📊 Cadastre data fetched:', result);
       return result;
 
     } catch (error) {
@@ -87,20 +75,42 @@ export class CadastreService {
     const url = `${this.LAYERS.POINTS}/query?${new URLSearchParams(query)}`;
     console.log('🗺️ Querying point data:', url);
 
-    const response = await fetch(url);
-    const data = await response.json();
-    
-    if (data.features && data.features.length > 0) {
-      return data.features[0].attributes;
+    try {
+      const response = await fetch(url);
+      const data = await response.json();
+      
+      console.log('📍 Point query response:', data);
+      
+      if (data.error) {
+        throw new Error(`Point query error: ${data.error.message || data.error}`);
+      }
+      
+      if (data.features && data.features.length > 0) {
+        const pointData = data.features[0].attributes;
+        
+        // Add geometry coordinates if available
+        if (data.features[0].geometry) {
+          const geom = data.features[0].geometry;
+          pointData.x = geom.x;
+          pointData.y = geom.y;
+        }
+        
+        console.log('✅ Point data extracted:', pointData);
+        return pointData;
+      }
+      
+      console.warn('⚠️ No point features found for GUID:', guid);
+      return null;
+    } catch (error) {
+      console.error('❌ Error querying point data:', error);
+      throw error;
     }
-    return null;
   }
 
   /**
    * Query building data from Layer 1 using building_guid (matches Efficy backend)
    */
   static async queryBuildingData(buildingGuid) {
-    // Use building_guid instead of parcel_guid to match your backend logic
     const query = {
       where: `guid = '${buildingGuid}'`,
       outFields: 'seq,id,guid,parcel_guid,area_m2', // Match your backend outFields
@@ -111,13 +121,28 @@ export class CadastreService {
     const url = `${this.LAYERS.BUILDINGS}/query?${new URLSearchParams(query)}`;
     console.log('🏢 Querying building data by building_guid:', url);
 
-    const response = await fetch(url);
-    const data = await response.json();
-    
-    if (data.features && data.features.length > 0) {
-      return data.features.map(feature => feature.attributes);
+    try {
+      const response = await fetch(url);
+      const data = await response.json();
+      
+      console.log('🏢 Building query response:', data);
+      
+      if (data.error) {
+        throw new Error(`Building query error: ${data.error.message || data.error}`);
+      }
+      
+      if (data.features && data.features.length > 0) {
+        const buildings = data.features.map(feature => feature.attributes);
+        console.log('✅ Building data extracted:', buildings);
+        return buildings;
+      }
+      
+      console.warn('⚠️ No building features found for GUID:', buildingGuid);
+      return [];
+    } catch (error) {
+      console.error('❌ Error querying building data:', error);
+      throw error;
     }
-    return [];
   }
 
   /**
@@ -134,13 +159,28 @@ export class CadastreService {
     const url = `${this.LAYERS.PARCELS}/query?${new URLSearchParams(query)}`;
     console.log('📋 Querying parcel data:', url);
 
-    const response = await fetch(url);
-    const data = await response.json();
-    
-    if (data.features && data.features.length > 0) {
-      return data.features[0].attributes;
+    try {
+      const response = await fetch(url);
+      const data = await response.json();
+      
+      console.log('📋 Parcel query response:', data);
+      
+      if (data.error) {
+        throw new Error(`Parcel query error: ${data.error.message || data.error}`);
+      }
+      
+      if (data.features && data.features.length > 0) {
+        const parcelData = data.features[0].attributes;
+        console.log('✅ Parcel data extracted:', parcelData);
+        return parcelData;
+      }
+      
+      console.warn('⚠️ No parcel features found for GUID:', guid);
+      return null;
+    } catch (error) {
+      console.error('❌ Error querying parcel data:', error);
+      throw error;
     }
-    return null;
   }
 
   /**
@@ -196,5 +236,42 @@ export class CadastreService {
     console.log('📍 Formatted address:', formattedAddress);
     
     return formattedAddress;
+  }
+
+  /**
+   * ✅ SIMPLIFIED: Test connection to cadastre services
+   */
+  static async testConnection() {
+    console.log('🔍 Testing cadastre service connections...');
+    
+    const tests = [
+      { name: 'Points Layer', url: `${this.LAYERS.POINTS}/query?where=1=1&returnCountOnly=true&f=json` },
+      { name: 'Buildings Layer', url: `${this.LAYERS.BUILDINGS}/query?where=1=1&returnCountOnly=true&f=json` },
+      { name: 'Parcels Layer', url: `${this.LAYERS.PARCELS}/query?where=1=1&returnCountOnly=true&f=json` }
+    ];
+
+    const results = [];
+    
+    for (const test of tests) {
+      try {
+        console.log(`🧪 Testing ${test.name}...`);
+        const response = await fetch(test.url);
+        const data = await response.json();
+        
+        if (data.error) {
+          results.push({ name: test.name, status: 'ERROR', error: data.error.message });
+          console.error(`❌ ${test.name} failed:`, data.error);
+        } else {
+          results.push({ name: test.name, status: 'OK', count: data.count });
+          console.log(`✅ ${test.name} OK - ${data.count} features`);
+        }
+      } catch (error) {
+        results.push({ name: test.name, status: 'FAILED', error: error.message });
+        console.error(`💥 ${test.name} failed:`, error);
+      }
+    }
+    
+    console.log('🧪 Connection test results:', results);
+    return results;
   }
 }

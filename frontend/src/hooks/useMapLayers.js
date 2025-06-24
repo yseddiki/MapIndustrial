@@ -1,4 +1,4 @@
-// src/hooks/useMapLayers.js
+// src/hooks/useMapLayers.js - FIXED VERSION
 
 import { useState, useCallback } from 'react';
 import { CONFIG } from '../config/config';
@@ -160,7 +160,7 @@ export const useMapLayers = () => {
     return extractedData;
   }, []);
 
-  // ✅ UPDATED: Enhanced helper function to show immediate point data
+  // ✅ SIMPLIFIED: Helper function to show immediate point data
   const showImmediatePointData = useCallback((pointAttributes, layerFields) => {
     console.log('📍 Showing immediate point data:', pointAttributes);
     
@@ -172,52 +172,14 @@ export const useMapLayers = () => {
     if (pointDetailsEl && pointAttributes) {
       const address = CadastreService.formatAddress(pointAttributes);
       
-      // Build dynamic HTML based on available fields
-      let fieldsHtml = '';
-      
-      // Define display order and labels for known fields
-      const fieldDisplay = [
-        { name: 'seq', label: '🔢 SEQ', priority: 1 },
-        { name: 'id', label: '🆔 ID', priority: 2 },
-        { name: 'guid', label: '🔑 GUID', priority: 3 },
-        { name: 'country', label: '🌍 Country', priority: 4 },
-        { name: 'town_nl', label: '🏘️ City (NL)', priority: 5 },
-        { name: 'town_fr', label: '🏘️ City (FR)', priority: 6 },
-        { name: 'town_de', label: '🏘️ City (DE)', priority: 7 },
-        { name: 'postcode', label: '📮 Postcode', priority: 8 },
-        { name: 'street_nl', label: '🛣️ Street (NL)', priority: 9 },
-        { name: 'street_fr', label: '🛣️ Street (FR)', priority: 10 },
-        { name: 'street_de', label: '🛣️ Street (DE)', priority: 11 },
-        { name: 'number', label: '🔢 Number', priority: 12 },
-        { name: 'building_guid', label: '🏗️ Building GUID', priority: 13 },
-        { name: 'x', label: '📐 Longitude', priority: 14 },
-        { name: 'y', label: '📐 Latitude', priority: 15 }
-      ];
-      
-      // Add formatted address first
-      fieldsHtml += `<strong>📍 Address:</strong><span>${address}</span>`;
-      
-      // Add all fields in display order
-      fieldDisplay.forEach(fieldDef => {
-        const value = pointAttributes[fieldDef.name];
-        if (value !== undefined && value !== null && value !== '') {
-          fieldsHtml += `<strong>${fieldDef.label}:</strong><span>${value}</span>`;
-        } else {
-          fieldsHtml += `<strong>${fieldDef.label}:</strong><span>N/A</span>`;
-        }
-      });
-      
-      // Add any additional fields not in the display list
-      Object.keys(pointAttributes).forEach(key => {
-        if (!fieldDisplay.find(f => f.name === key) && key !== 'x' && key !== 'y') {
-          const value = pointAttributes[key];
-          fieldsHtml += `<strong>📋 ${key}:</strong><span>${value || 'N/A'}</span>`;
-        }
-      });
-      
       pointDetailsEl.innerHTML = `
-        <div style="display: grid; grid-template-columns: auto 1fr; gap: 4px;">
-          ${fieldsHtml}
+        <div style="display: grid; grid-template-columns: auto 1fr; gap: 8px; align-items: center;">
+          <strong>📍 Address:</strong><span style="color: #003F2D; font-weight: 500;">${address}</span>
+          <strong>🆔 ID:</strong><span>${pointAttributes.id || 'N/A'}</span>
+          <strong>🔑 GUID:</strong><span style="font-family: monospace; font-size: 10px;">${pointAttributes.guid || 'N/A'}</span>
+          <strong>🌍 Country:</strong><span>${pointAttributes.country || 'N/A'}</span>
+          <strong>📮 Postcode:</strong><span>${pointAttributes.postcode || 'N/A'}</span>
+          <strong>📐 Coordinates:</strong><span>${pointAttributes.x && pointAttributes.y ? `${pointAttributes.x.toFixed(6)}, ${pointAttributes.y.toFixed(6)}` : 'N/A'}</span>
         </div>
       `;
       
@@ -225,75 +187,73 @@ export const useMapLayers = () => {
     }
   }, []);
 
-  // ✅ V2 UPDATE: Helper function to update cadastre popup with comprehensive data
+  // ✅ SIMPLIFIED: Helper function to update cadastre popup with clean data display
   const updateCadastrePopupContent = useCallback((cadastreData) => {
-    console.log('📋 Updating popup with comprehensive data:', cadastreData);
+    console.log('📋 Updating popup with data:', cadastreData);
     
-    // Hide the additional loading message
+    // Hide the loading message
     const additionalLoadingEl = document.getElementById('additional-loading');
     if (additionalLoadingEl) additionalLoadingEl.style.display = 'none';
     
     // Store data globally for the create function
     window.cadastreData = cadastreData;
     
-    // Update Parcel Information
-    const parcelInfoEl = document.getElementById('parcel-info');
-    const parcelDetailsEl = document.getElementById('parcel-details');
-    if (cadastreData.parcel && parcelDetailsEl && parcelInfoEl) {
-      const parcel = cadastreData.parcel;
-      parcelInfoEl.style.display = 'block';
-      parcelDetailsEl.innerHTML = `
-        <div style="display: grid; grid-template-columns: auto 1fr; gap: 4px;">
-          <strong>📋 Parcel Key:</strong><span>${parcel.parcelkey || 'N/A'}</span>
-          <strong>🆔 GUID:</strong><span>${parcel.guid || 'N/A'}</span>
-          <strong>📐 Area:</strong><span>${CadastreService.formatArea(parcel.area_m2)}</span>
+    // Update Point Information - always show
+    const pointDetailsEl = document.getElementById('point-details');
+    if (pointDetailsEl && cadastreData.point) {
+      const point = cadastreData.point;
+      const address = CadastreService.formatAddress(point);
+      
+      pointDetailsEl.innerHTML = `
+        <div style="display: grid; grid-template-columns: auto 1fr; gap: 8px; align-items: center;">
+          <strong>📍 Address:</strong><span style="color: #003F2D; font-weight: 500;">${address}</span>
+          <strong>🆔 ID:</strong><span>${point.id || 'N/A'}</span>
+          <strong>🔑 GUID:</strong><span style="font-family: monospace; font-size: 10px;">${point.guid || 'N/A'}</span>
+          <strong>🌍 Country:</strong><span>${point.country || 'N/A'}</span>
+          <strong>📮 Postcode:</strong><span>${point.postcode || 'N/A'}</span>
+          <strong>📐 Coordinates:</strong><span>${point.x && point.y ? `${point.x.toFixed(6)}, ${point.y.toFixed(6)}` : 'N/A'}</span>
         </div>
       `;
     }
     
-    // Update Building Information
+    // Update Building Information - show if available
     const buildingInfoEl = document.getElementById('building-info');
     const buildingDetailsEl = document.getElementById('building-details');
     if (cadastreData.buildings && cadastreData.buildings.length > 0 && buildingDetailsEl && buildingInfoEl) {
       buildingInfoEl.style.display = 'block';
       
-      let buildingHtml = '';
-      cadastreData.buildings.forEach((building, index) => {
-        buildingHtml += `
-          <div style="margin-bottom: 8px; padding: 6px; background: #fff; border-radius: 3px; border-left: 3px solid #17E88F;">
-            <div style="font-weight: bold; margin-bottom: 4px;">Building ${index + 1}</div>
-            <div style="display: grid; grid-template-columns: auto 1fr; gap: 4px; font-size: 10px;">
-              <strong>🆔 GUID:</strong><span>${building.guid || 'N/A'}</span>
-              <strong>🏠 Parcel GUID:</strong><span>${building.parcel_guid || 'N/A'}</span>
-              <strong>📐 Area:</strong><span>${CadastreService.formatArea(building.area_m2)}</span>
-            </div>
-          </div>
-        `;
-      });
-      
-      buildingDetailsEl.innerHTML = buildingHtml;
-    }
-    
-    // Update Submarket Information (matches your Efficy backend data)
-    const submarketInfoEl = document.getElementById('submarket-info');
-    const submarketDetailsEl = document.getElementById('submarket-details');
-    if (cadastreData.submarket && submarketDetailsEl && submarketInfoEl) {
-      submarketInfoEl.style.display = 'block';
-      const submarket = cadastreData.submarket;
-      
-      submarketDetailsEl.innerHTML = `
-        <div style="display: grid; grid-template-columns: auto 1fr; gap: 4px;">
-          <strong>🏢 Office Submarket:</strong><span>${submarket.officesubmarket || 'N/A'}</span>
-          <strong>🏭 Logistics Submarket:</strong><span>${submarket.logisticsubmarket || 'N/A'}</span>
-          <strong>🛍️ Retail Submarket:</strong><span>${submarket.retailsubmarket || 'N/A'}</span>
-          <strong>🏘️ Municipality (NL):</strong><span>${submarket.t_mun_nl || 'N/A'}</span>
-          <strong>🏘️ Municipality (FR):</strong><span>${submarket.t_mun_fr || 'N/A'}</span>
-          <strong>🗺️ Arrondissement (NL):</strong><span>${submarket.t_arrd_nl || 'N/A'}</span>
-          <strong>🗺️ Arrondissement (FR):</strong><span>${submarket.t_arrd_fr || 'N/A'}</span>
-          <strong>🌍 Province (NL):</strong><span>${submarket.t_provi_nl || 'N/A'}</span>
-          <strong>🌍 Province (FR):</strong><span>${submarket.t_provi_fr || 'N/A'}</span>
+      const building = cadastreData.buildings[0]; // Show first building
+      buildingDetailsEl.innerHTML = `
+        <div style="display: grid; grid-template-columns: auto 1fr; gap: 8px; align-items: center;">
+          <strong>🆔 ID:</strong><span>${building.id || 'N/A'}</span>
+          <strong>🔑 GUID:</strong><span style="font-family: monospace; font-size: 10px;">${building.guid || 'N/A'}</span>
+          <strong>📐 Building Area:</strong><span style="color: #003F2D; font-weight: 500;">${CadastreService.formatArea(building.area_m2)}</span>
+          <strong>🏠 Parcel Link:</strong><span style="font-family: monospace; font-size: 10px;">${building.parcel_guid || 'N/A'}</span>
         </div>
       `;
+    } else {
+      // Hide building section if no data
+      if (buildingInfoEl) buildingInfoEl.style.display = 'none';
+    }
+    
+    // Update Parcel Information - show if available
+    const parcelInfoEl = document.getElementById('parcel-info');
+    const parcelDetailsEl = document.getElementById('parcel-details');
+    if (cadastreData.parcel && parcelDetailsEl && parcelInfoEl) {
+      parcelInfoEl.style.display = 'block';
+      const parcel = cadastreData.parcel;
+      
+      parcelDetailsEl.innerHTML = `
+        <div style="display: grid; grid-template-columns: auto 1fr; gap: 8px; align-items: center;">
+          <strong>📋 Parcel Key:</strong><span style="color: #003F2D; font-weight: 500;">${parcel.parcelkey || 'N/A'}</span>
+          <strong>🆔 ID:</strong><span>${parcel.seq || 'N/A'}</span>
+          <strong>🔑 GUID:</strong><span style="font-family: monospace; font-size: 10px;">${parcel.guid || 'N/A'}</span>
+          <strong>📐 Parcel Area:</strong><span style="color: #003F2D; font-weight: 500;">${CadastreService.formatArea(parcel.area_m2)}</span>
+        </div>
+      `;
+    } else {
+      // Hide parcel section if no data
+      if (parcelInfoEl) parcelInfoEl.style.display = 'none';
     }
     
     // Show any errors
@@ -305,6 +265,8 @@ export const useMapLayers = () => {
         errorDetailsEl.innerHTML = cadastreData.errors.join('<br>');
       }
     }
+    
+    console.log('✅ Popup updated with clean data display');
   }, []);
 
   // ✅ V2 UPDATE: Helper function to show error in cadastre popup
@@ -320,240 +282,112 @@ export const useMapLayers = () => {
     if (errorDetailsEl) errorDetailsEl.innerHTML = errorMessage;
   }, []);
 
-  // ✅ UPDATED: Set up click handling with comprehensive graphic and layer logging
+  // ✅ MODAL APPROACH: Set up click handling to open modal for cadastre points
   const setupCadastreClickHandling = useCallback((view, cadastreLayer) => {
-    console.log('🎯 Setting up cadastre click handling on map view');
-    
-    // First, inspect the layer fields when setting up
-    const layerInfo = inspectLayerFields(cadastreLayer);
+    console.log('🎯 Setting up cadastre click handling for modal');
     
     view.on('click', async (event) => {
-      console.log('🖱️ Map clicked, checking for cadastre features...');
-      console.log('📍 Click event details:', {
-        x: event.x,
-        y: event.y,
-        button: event.button,
-        mapPoint: event.mapPoint
-      });
-      
       try {
         // Perform hit test to see what was clicked
         const response = await view.hitTest(event);
-        
-        console.log('🎯 Hit test results:', response);
-        console.log('📊 Hit test summary:', {
-          totalResults: response.results.length,
-          resultsTypes: response.results.map(r => r.type),
-          hasGraphics: response.results.filter(r => r.graphic).length
-        });
-        
-        // ✅ LOG ALL CLICKED GRAPHICS (not just cadastre)
-        response.results.forEach((result, index) => {
-          console.log(`🔍 Result ${index + 1}:`, {
-            type: result.type,
-            hasGraphic: !!result.graphic,
-            hasLayer: !!result.graphic?.layer
-          });
-          
-          if (result.graphic) {
-            const graphic = result.graphic;
-            const layer = graphic.layer;
-            
-            console.log(`📍 GRAPHIC ${index + 1} DETAILS:`, {
-              graphic: graphic,
-              graphicType: typeof graphic,
-              graphicConstructor: graphic.constructor.name,
-              hasAttributes: !!graphic.attributes,
-              hasGeometry: !!graphic.geometry,
-              hasSymbol: !!graphic.symbol,
-              hasPopupTemplate: !!graphic.popupTemplate
-            });
-            
-            console.log(`🗂️ LAYER ${index + 1} DETAILS:`, {
-              layer: layer,
-              layerTitle: layer?.title,
-              layerId: layer?.id,
-              layerUrl: layer?.url,
-              layerType: layer?.type,
-              layerConstructor: layer?.constructor?.name,
-              hasFields: !!(layer?.fields && layer.fields.length > 0),
-              fieldsCount: layer?.fields?.length || 0,
-              isOurCadastreLayer: layer === cadastreLayer
-            });
-            
-            console.log(`📋 ATTRIBUTES ${index + 1}:`, graphic.attributes);
-            console.log(`🗺️ GEOMETRY ${index + 1}:`, {
-              geometry: graphic.geometry,
-              geometryType: graphic.geometry?.type,
-              hasCoordinates: !!(graphic.geometry?.x !== undefined || graphic.geometry?.longitude !== undefined),
-              x: graphic.geometry?.x || graphic.geometry?.longitude,
-              y: graphic.geometry?.y || graphic.geometry?.latitude,
-              spatialReference: graphic.geometry?.spatialReference
-            });
-            
-            console.log(`🎨 SYMBOL ${index + 1}:`, {
-              symbol: graphic.symbol,
-              symbolType: graphic.symbol?.type,
-              symbolColor: graphic.symbol?.color,
-              symbolSize: graphic.symbol?.size
-            });
-          }
-        });
         
         // Check if any results are from our cadastre layer
         const cadastreResults = response.results.filter(result => 
           result.graphic && result.graphic.layer === cadastreLayer
         );
         
-        console.log('🔍 CADASTRE LAYER FILTER RESULTS:', {
-          totalResults: response.results.length,
-          cadastreResults: cadastreResults.length,
-          cadastreLayer: cadastreLayer,
-          cadastreLayerTitle: cadastreLayer?.title,
-          cadastreLayerId: cadastreLayer?.id
-        });
-        
         if (cadastreResults.length > 0) {
           const clickedGraphic = cadastreResults[0].graphic;
-          const layer = clickedGraphic.layer;
           
-          console.log('🎯 ✅ CADASTRE DOT CLICKED!');
-          console.log('📍 CLICKED CADASTRE GRAPHIC:', clickedGraphic);
-          console.log('🏷️ CADASTRE GRAPHIC PROPERTIES:', {
-            attributes: clickedGraphic.attributes,
-            geometry: clickedGraphic.geometry,
-            symbol: clickedGraphic.symbol,
-            popupTemplate: clickedGraphic.popupTemplate,
-            layer: clickedGraphic.layer,
-            visible: clickedGraphic.visible
-          });
+          console.log('🎯 ✅ CADASTRE DOT CLICKED! Opening modal...');
           
-          console.log('🗂️ CADASTRE LAYER PROPERTIES:', {
-            title: layer.title,
-            id: layer.id,
-            url: layer.url,
-            type: layer.type,
-            visible: layer.visible,
-            opacity: layer.opacity,
-            fieldsCount: layer.fields?.length || 0,
-            capabilities: layer.capabilities,
-            renderer: layer.renderer,
-            popupTemplate: layer.popupTemplate
-          });
+          // Extract point data from the clicked graphic
+          const pointData = extractAttributesFromGraphic(clickedGraphic, cadastreLayer.fields);
           
-          // ✅ Dynamic attribute extraction using layer field definitions
-          const extractedData = extractAttributesFromGraphic(clickedGraphic, layer.fields);
+          console.log('📍 Extracted point data for modal:', pointData);
           
-          console.log('✅ Successfully extracted cadastre data:', extractedData);
-
-          // ✅ SHOW IMMEDIATE POINT DATA using extracted data
-          showImmediatePointData(extractedData, layer.fields);
-
-          // ✅ Try to fetch additional data if GUID is available
-          const guid = extractedData.guid;
-          if (guid) {
-            console.log('🔍 Fetching additional cadastre data for GUID:', guid);
-            
-            try {
-              // Fetch additional comprehensive data using the GUID (in background)
-              const additionalData = await CadastreService.fetchCadastreDataByGuid(guid);
-              
-              // Update the popup content with additional fetched data
-              updateCadastrePopupContent(additionalData);
-              
-            } catch (error) {
-              console.error('❌ Error fetching additional cadastre data:', error);
-              showCadastrePopupError(error.message);
-            }
+          // Trigger modal opening with point data
+          if (window.openCadastreModal) {
+            window.openCadastreModal(pointData);
           } else {
-            console.warn('⚠️ No GUID found for clicked cadastre point - only showing basic data');
-            console.warn('⚠️ Available fields:', Object.keys(extractedData));
-            // Hide the loading message since we won't fetch additional data
-            setTimeout(() => {
-              const additionalLoadingEl = document.getElementById('additional-loading');
-              if (additionalLoadingEl) additionalLoadingEl.style.display = 'none';
-            }, 100);
+            console.warn('⚠️ Modal handler not available yet');
           }
+          
         } else {
           console.log('ℹ️ No cadastre features clicked');
-          
-          // ✅ LOG OTHER CLICKED FEATURES (building points, etc.)
-          if (response.results.length > 0) {
-            console.log('🔍 OTHER FEATURES CLICKED (not cadastre):');
-            response.results.forEach((result, index) => {
-              if (result.graphic && result.graphic.layer !== cadastreLayer) {
-                console.log(`🏢 NON-CADASTRE GRAPHIC ${index + 1}:`, {
-                  layer: result.graphic.layer,
-                  layerTitle: result.graphic.layer?.title,
-                  layerType: result.graphic.layer?.type,
-                  attributes: result.graphic.attributes,
-                  geometry: result.graphic.geometry
-                });
-              }
-            });
-          } else {
-            console.log('ℹ️ No features clicked at all');
-          }
         }
       } catch (error) {
-        console.error('❌ Error in hit test:', error);
+        console.error('❌ Error in cadastre click handling:', error);
       }
     });
     
-    console.log('✅ Cadastre click handling set up successfully with comprehensive graphic logging');
-  }, [inspectLayerFields, extractAttributesFromGraphic, showImmediatePointData, updateCadastrePopupContent, showCadastrePopupError]);
+    console.log('✅ Cadastre click handling set up for modal approach');
+  }, [inspectLayerFields, extractAttributesFromGraphic]);
 
+  // ✅ FIXED: Use FeatureLayer instead of MapImageLayer for proper data access
   const createCadastreLayer = useCallback(async () => {
     // Ensure ArcGIS API is loaded
     if (!window.require) {
       throw new Error('ArcGIS API not loaded yet');
     }
 
-    // ✅ UPDATED: Use MapImageLayer for MapServer instead of FeatureLayer
-    const { MapImageLayer } = await new Promise((resolve, reject) => {
+    // ✅ FIXED: Use FeatureLayer instead of MapImageLayer
+    const { FeatureLayer } = await new Promise((resolve, reject) => {
       window.require([
-        'esri/layers/MapImageLayer'
-      ], (MapImageLayer) => {
-        resolve({ MapImageLayer });
+        'esri/layers/FeatureLayer'
+      ], (FeatureLayer) => {
+        resolve({ FeatureLayer });
       }, reject);
     });
 
-    // Create the CBRE Belgium Cadastre layer as MapImageLayer
-    const layer = new MapImageLayer({
-      url: CONFIG.ARCGIS.CADASTRE_LAYER_URL.replace('/2', ''), // Remove layer ID from URL for MapImageLayer
+    // ✅ FIXED: Create the CBRE Belgium Cadastre layer as FeatureLayer using the full URL with layer ID
+    const layer = new FeatureLayer({
+      url: CONFIG.ARCGIS.CADASTRE_LAYER_URL, // Keep the /2 for the specific layer
       title: 'Belgium Cadastre',
       opacity: 1,
       visible: false, // Start hidden for performance
-      sublayers: [{
-        id: 2, // Specify the specific sublayer (Address layer)
-        visible: true,
-        // ✅ Custom renderer for white dots with black outline
-        renderer: {
-          type: "simple",
-          symbol: {
-            type: "simple-marker",
-            size: 7, // ✅ 7px white dots as requested
-            color: [255, 255, 255], // ✅ White fill
-            outline: {
-              width: 1,
-              color: [0, 0, 0] // ✅ Black outline
-            }
+      // ✅ FIXED: Direct renderer for FeatureLayer
+      renderer: {
+        type: "simple",
+        symbol: {
+          type: "simple-marker",
+          size: 7, // 7px white dots as requested
+          color: [255, 255, 255], // White fill
+          outline: {
+            width: 1,
+            color: [0, 0, 0] // Black outline
           }
-        },
-        popupTemplate: {
-          title: "📍 Cadastre Property",
-          content: createCadastrePopupContent()
         }
-      }]
+      },
+      popupTemplate: {
+        title: "📍 Cadastre Property",
+        content: createCadastrePopupContent()
+      },
+      // ✅ FIXED: Set outFields to get all fields
+      outFields: ["*"],
+      // ✅ FIXED: Enable feature querying
+      definitionExpression: "1=1" // Show all features
     });
 
-    console.log('🏛️ Cadastre MapImageLayer created with larger white dots:', {
+    console.log('🏛️ Cadastre FeatureLayer created with white dots and full data access:', {
       url: layer.url,
       title: layer.title,
       visible: layer.visible,
-      sublayers: layer.sublayers.length,
+      type: layer.type,
       symbolColor: 'white with black outline',
-      symbolSize: '7px'
+      symbolSize: '7px',
+      outFields: layer.outFields,
+      canQuery: true
+    });
+
+    // ✅ FIXED: Wait for layer to load and log field information
+    layer.when(() => {
+      console.log('✅ Cadastre layer loaded successfully');
+      console.log('📋 Available fields:', layer.fields.map(f => f.name));
+      console.log('🔗 Layer capabilities:', layer.capabilities);
+      console.log('🎯 Layer ready for click handling');
+    }).catch(error => {
+      console.error('❌ Failed to load cadastre layer:', error);
     });
 
     setCadastreLayer(layer);
@@ -681,29 +515,29 @@ export const useMapLayers = () => {
       console.log(`🟫 Cadastre layer visibility changing to: ${visible}`);
       
       if (visible) {
-        console.log('📊 Loading cadastre layer with larger white dots - this may take a moment due to many points...');
-        console.log('🎯 When visible, click on any white dot to see console.log messages!');
+        console.log('📊 Loading cadastre FeatureLayer with white dots - this may take a moment...');
+        console.log('🎯 When visible, click on any white dot to see complete data!');
         
-        // Add event listener to log graphics when layer loads
+        // Add event listener to log when layer loads
         const handleLayerLoad = () => {
           setTimeout(() => {
-            if (cadastreLayer.source && cadastreLayer.source.length > 0) {
-              console.log(`📍 Cadastre layer loaded with ${cadastreLayer.source.length} features`);
-              console.log('📋 Sample cadastre feature:', cadastreLayer.source.items[0]);
-            } else {
-              // For feature layers, we can't easily access all graphics
-              console.log('📍 Cadastre layer is visible - larger white dots will load dynamically based on map extent');
-              console.log('🗺️ Cadastre layer details:', {
-                url: cadastreLayer.url,
-                title: cadastreLayer.title,
-                type: cadastreLayer.type,
-                visible: cadastreLayer.visible,
-                opacity: cadastreLayer.opacity,
-                symbolColor: 'white with black outline',
-                symbolSize: '7px'
-              });
+            console.log('📍 Cadastre FeatureLayer is now visible and clickable');
+            console.log('🔍 Layer details:', {
+              url: cadastreLayer.url,
+              title: cadastreLayer.title,
+              type: cadastreLayer.type,
+              visible: cadastreLayer.visible,
+              opacity: cadastreLayer.opacity,
+              fieldsCount: cadastreLayer.fields?.length || 0,
+              symbolColor: 'white with black outline',
+              symbolSize: '7px',
+              canQuery: true
+            });
+            
+            if (cadastreLayer.fields) {
+              console.log('📋 Available fields for clicking:', cadastreLayer.fields.map(f => f.name));
             }
-          }, 2000); // Give it time to load
+          }, 1000);
         };
 
         // Set up one-time event listener for when layer becomes visible
@@ -733,6 +567,6 @@ export const useMapLayers = () => {
     createBuildingsLayer,
     addBuildingsToMap,
     updateCadastreVisibility,
-    setupCadastreClickHandling // ✅ New function to fix click handling
+    setupCadastreClickHandling
   };
 };

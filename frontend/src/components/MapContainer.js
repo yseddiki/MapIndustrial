@@ -1,6 +1,6 @@
 // src/components/MapContainer.js
 
-import React, { useRef, useEffect } from 'react';
+import React, { useRef, useEffect, useState } from 'react';
 import { useArcGISAPI } from '../hooks/useArcGISAPI';
 import { useMap } from '../hooks/useMap';
 import { useMapLayers } from '../hooks/useMapLayers';
@@ -10,9 +10,14 @@ import ErrorContainer from './ErrorContainer';
 import LoadingOverlay from './LoadingOverlay';
 import ProcessingOverlay from './ProcessingOverlay';
 import LayerControl from './LayerControl';
+import CadastreModal from './CadastreModal';
 
 const MapContainer = ({ selectedAsset }) => {
   const mapContainerRef = useRef(null);
+  
+  // Modal state
+  const [isCadastreModalOpen, setIsCadastreModalOpen] = useState(false);
+  const [selectedCadastrePoint, setSelectedCadastrePoint] = useState(null);
   
   // Custom hooks
   const {
@@ -41,7 +46,7 @@ const MapContainer = ({ selectedAsset }) => {
     createBuildingsLayer,
     addBuildingsToMap,
     updateCadastreVisibility,
-    setupCadastreClickHandling // ✅ Add the new click handling function
+    setupCadastreClickHandling
   } = useMapLayers();
 
   const {
@@ -54,12 +59,11 @@ const MapContainer = ({ selectedAsset }) => {
     calculateQualityDistribution
   } = useBuildingData();
 
-  // ✅ V2 UPDATE: Get debounced search props
   const {
     qualityFilters,
     searchTerm,
-    searchInput, // What user is typing
-    isSearching, // Whether search is pending
+    searchInput,
+    isSearching,
     handleQualityFilterToggle,
     handleSearchChange,
     handleClearSearch,
@@ -67,6 +71,25 @@ const MapContainer = ({ selectedAsset }) => {
     handleDeselectAllQualities,
     applyFilters
   } = useFilters();
+
+  // Set up global modal handler
+  useEffect(() => {
+    window.openCadastreModal = (pointData) => {
+      console.log('🎯 Opening cadastre modal with point data:', pointData);
+      setSelectedCadastrePoint(pointData);
+      setIsCadastreModalOpen(true);
+    };
+
+    return () => {
+      window.openCadastreModal = null;
+    };
+  }, []);
+
+  // Handle modal close
+  const handleModalClose = () => {
+    setIsCadastreModalOpen(false);
+    setSelectedCadastrePoint(null);
+  };
 
   // Initialize map and layers
   useEffect(() => {
@@ -97,13 +120,9 @@ const MapContainer = ({ selectedAsset }) => {
           view: view
         });
         
-        // ✅ Set up cadastre click handling after map is ready
+        // Set up cadastre click handling after map is ready
         if (cadastre && view) {
-          console.log('🎯 Setting up cadastre click handling...', {
-            cadastreLayer: cadastre,
-            view: view,
-            hasSetupFunction: !!setupCadastreClickHandling
-          });
+          console.log('🎯 Setting up cadastre click handling for modal...');
           setupCadastreClickHandling(view, cadastre);
         } else {
           console.warn('❌ Cannot set up cadastre click handling - missing cadastre layer or view');
@@ -186,9 +205,9 @@ const MapContainer = ({ selectedAsset }) => {
       {isMapReady && (
         <LayerControl
           isProcessing={isProcessing}
-          searchTerm={searchTerm} // Actual search term for filtering
-          searchInput={searchInput} // ✅ V2 UPDATE: What user is typing
-          isSearching={isSearching} // ✅ V2 UPDATE: Search pending state
+          searchTerm={searchTerm}
+          searchInput={searchInput}
+          isSearching={isSearching}
           onSearchChange={handleSearchChange}
           onClearSearch={handleClearSearch}
           buildings={buildings}
@@ -212,6 +231,13 @@ const MapContainer = ({ selectedAsset }) => {
       {!isMapReady && (
         <LoadingOverlay />
       )}
+
+      {/* Cadastre Modal */}
+      <CadastreModal
+        isOpen={isCadastreModalOpen}
+        onClose={handleModalClose}
+        cadastrePoint={selectedCadastrePoint}
+      />
     </div>
   );
 };

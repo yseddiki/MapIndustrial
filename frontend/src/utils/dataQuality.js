@@ -1,4 +1,4 @@
-// src/utils/dataQuality.js
+// src/utils/dataQuality.js - UPDATED VERSION
 
 export const getDataQualityLevel = (building) => {
   // Check if building is from Efficy (has K_PROPERTY)
@@ -113,114 +113,129 @@ export const createPopupContent = (building) => {
 
 export const createCadastrePopupContent = () => {
   return `
-    <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.2; color: #2c3e50; font-size: 12px;">
+    <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.3; color: #2c3e50; font-size: 13px;">
       
-      <!-- Content Container (visible immediately) -->
-      <div id="cadastre-content"
-        
-        <!-- Quality Status Header -->
-        <div style="background: linear-gradient(135deg, #003F2D 0%, #012A2D 100%); color: white; padding: 8px; margin: -10px -10px 8px -10px; border-radius: 6px; text-align: center;">
-          <div style="font-size: 18px; margin-bottom: 4px;">📍</div>
-          <div style="font-size: 12px; font-weight: bold; color: #FFFFFF;">Not in Efficy ! (From cadastre)</div>
-        </div>
+      <!-- Quality Status Header -->
+      <div style="background: linear-gradient(135deg, #003F2D 0%, #012A2D 100%); color: white; padding: 10px; margin: -10px -10px 12px -10px; border-radius: 6px; text-align: center;">
+        <div style="font-size: 20px; margin-bottom: 4px;">📍</div>
+        <div style="font-size: 13px; font-weight: bold;">Cadastre Property</div>
+        <div style="font-size: 11px; opacity: 0.9;">Not in Efficy</div>
+      </div>
 
-        <!-- Point Information -->
-        <div id="point-info" style="background: #f8f9fa; padding: 8px; border-radius: 4px; margin-bottom: 8px;">
-          <h4 style="margin: 0 0 6px 0; color: #003F2D; font-size: 11px; font-weight: bold;">📍 Point Details</h4>
-          <div id="point-details" style="font-size: 11px;"></div>
-        </div>
+      <!-- Point Information -->
+      <div id="point-info" style="background: #f8f9fa; padding: 10px; border-radius: 6px; margin-bottom: 10px;">
+        <h4 style="margin: 0 0 8px 0; color: #003F2D; font-size: 12px; font-weight: bold; border-bottom: 1px solid #dee2e6; padding-bottom: 4px;">📍 Address Information</h4>
+        <div id="point-details" style="font-size: 12px; line-height: 1.4;"></div>
+      </div>
 
-        <!-- Parcel Information -->
-        <div id="parcel-info" style="background: #f8f9fa; padding: 8px; border-radius: 4px; margin-bottom: 8px; display: none;">
-          <h4 style="margin: 0 0 6px 0; color: #003F2D; font-size: 11px; font-weight: bold;">📋 Parcel Details</h4>
-          <div id="parcel-details" style="font-size: 11px;"></div>
-        </div>
+      <!-- Building Information -->
+      <div id="building-info" style="background: #f8f9fa; padding: 10px; border-radius: 6px; margin-bottom: 10px; display: none;">
+        <h4 style="margin: 0 0 8px 0; color: #003F2D; font-size: 12px; font-weight: bold; border-bottom: 1px solid #dee2e6; padding-bottom: 4px;">🏢 Building Information</h4>
+        <div id="building-details" style="font-size: 12px; line-height: 1.4;"></div>
+      </div>
 
-        <!-- Building Information -->
-        <div id="building-info" style="background: #f8f9fa; padding: 8px; border-radius: 4px; margin-bottom: 8px; display: none;">
-          <h4 style="margin: 0 0 6px 0; color: #003F2D; font-size: 11px; font-weight: bold;">🏢 Building Details</h4>
-          <div id="building-details" style="font-size: 11px;"></div>
-        </div>
+      <!-- Parcel Information -->
+      <div id="parcel-info" style="background: #f8f9fa; padding: 10px; border-radius: 6px; margin-bottom: 10px; display: none;">
+        <h4 style="margin: 0 0 8px 0; color: #003F2D; font-size: 12px; font-weight: bold; border-bottom: 1px solid #dee2e6; padding-bottom: 4px;">📋 Parcel Information</h4>
+        <div id="parcel-details" style="font-size: 12px; line-height: 1.4;"></div>
+      </div>
 
-        <!-- Asset Class Selection -->
-        <div style="background: #f8f9fa; padding: 8px; border-radius: 4px; margin-bottom: 8px;">
-          <h4 style="margin: 0 0 6px 0; color: #003F2D; font-size: 11px; font-weight: bold;">🏗️ Create in Efficy</h4>
-          <div style="margin-bottom: 6px;">
-            <label style="font-size: 11px; font-weight: bold; color: #435254;">Detailed Asset Class:</label>
-            <select id="assetClassDropdown" style="width: 100%; padding: 4px; margin-top: 2px; border: 1px solid #CAD1D3; border-radius: 3px; font-size: 11px; background: white;">
-              <option value="">Select Asset Class...</option>
-              <option value="office">Office</option>
-              <option value="retail">Retail</option>
-              <option value="industrial">Industrial</option>
-              <option value="residential">Residential</option>
-              <option value="hotel">Hotel</option>
-              <option value="healthcare">Healthcare</option>
-              <option value="education">Education</option>
-              <option value="mixed-use">Mixed Use</option>
-              <option value="land">Land</option>
-              <option value="other">Other</option>
-            </select>
-          </div>
-        </div>
+      <!-- Asset Class Selection -->
+      <div style="background: #f8f9fa; padding: 10px; border-radius: 6px; margin-bottom: 12px;">
+        <h4 style="margin: 0 0 8px 0; color: #003F2D; font-size: 12px; font-weight: bold;">🏗️ Property Type</h4>
+        <select id="assetClassDropdown" style="width: 100%; padding: 8px; border: 1px solid #CAD1D3; border-radius: 4px; font-size: 12px; background: white;">
+          <option value="">Select Property Type...</option>
+          <option value="office">Office</option>
+          <option value="retail">Retail</option>
+          <option value="industrial">Industrial</option>
+          <option value="residential">Residential</option>
+          <option value="hotel">Hotel</option>
+          <option value="healthcare">Healthcare</option>
+          <option value="education">Education</option>
+          <option value="mixed-use">Mixed Use</option>
+          <option value="land">Land</option>
+          <option value="other">Other</option>
+        </select>
+      </div>
 
-        <!-- Create Button -->
-        <div style="text-align: center; margin-top: 8px;">
-          <button onclick="createInEfficy()" 
-             style="display: inline-block; background: linear-gradient(135deg, #17E88F 0%, #00C896 100%); 
-                    color: #003F2D; padding: 8px 16px; border: none; border-radius: 20px; 
-                    font-weight: bold; font-size: 11px; box-shadow: 0 3px 6px rgba(23, 232, 143, 0.3); 
-                    transition: all 0.3s ease; cursor: pointer;">
-            🏗️ Create in Efficy
-          </button>
-        </div>
+      <!-- Create Button -->
+      <div style="text-align: center; margin-bottom: 8px;">
+        <button onclick="createThisProperty()" 
+           style="background: linear-gradient(135deg, #17E88F 0%, #00C896 100%); 
+                  color: #003F2D; padding: 12px 24px; border: none; border-radius: 25px; 
+                  font-weight: bold; font-size: 13px; box-shadow: 0 4px 8px rgba(23, 232, 143, 0.3); 
+                  transition: all 0.3s ease; cursor: pointer; width: 100%;">
+          🏗️ Create this property in Efficy
+        </button>
+      </div>
 
-        <!-- Error Display -->
-        <div id="error-info" style="display: none; background: #fee2e2; border: 1px solid #fecaca; padding: 8px; border-radius: 4px; margin-top: 8px;">
-          <h4 style="margin: 0 0 6px 0; color: #dc2626; font-size: 11px; font-weight: bold;">⚠️ Data Loading Issues</h4>
-          <div id="error-details" style="font-size: 10px; color: #dc2626;"></div>
-        </div>
+      <!-- Error Display -->
+      <div id="error-info" style="display: none; background: #fee2e2; border: 1px solid #fecaca; padding: 8px; border-radius: 4px; margin-top: 8px;">
+        <h4 style="margin: 0 0 6px 0; color: #dc2626; font-size: 11px; font-weight: bold;">⚠️ Loading Issues</h4>
+        <div id="error-details" style="font-size: 10px; color: #dc2626;"></div>
       </div>
 
       <script>
-        // Global variables to store fetched data
+        // Global variable to store all fetched data
         window.cadastreData = null;
         
-        function createInEfficy() {
+        function createThisProperty() {
           const assetClass = document.getElementById('assetClassDropdown').value;
           if (!assetClass) {
-            alert('Please select an Asset Class first!');
+            alert('Please select a property type first!');
             return;
           }
           
-          if (!window.cadastreData) {
-            alert('Cadastre data not loaded yet. Please wait.');
+          if (!window.cadastreData || !window.cadastreData.point) {
+            alert('Property data not available. Please try clicking the point again.');
             return;
           }
           
           const pointData = window.cadastreData.point;
           const parcelData = window.cadastreData.parcel;
+          const buildingsData = window.cadastreData.buildings;
           
-          console.log('🏗️ Creating in Efficy with comprehensive data:', {
-            pointData,
-            parcelData,
-            assetClass
+          // Format the address
+          const address = formatAddress(pointData);
+          
+          // Get areas
+          const parcelArea = parcelData ? parcelData.area_m2 : '';
+          const buildingArea = buildingsData && buildingsData.length > 0 ? buildingsData[0].area_m2 : '';
+          
+          // Log all data being sent
+          console.log('🏗️ Creating property in Efficy with data:', {
+            address: address,
+            assetClass: assetClass,
+            pointData: pointData,
+            parcelData: parcelData,
+            buildingsData: buildingsData
           });
           
-          // Use the formatted address and other comprehensive data
-          const address = pointData ? formatAddress(pointData) : 'N/A';
-          const parcelKey = parcelData ? parcelData.parcelkey : '';
-          const area = parcelData ? parcelData.area_m2 : '';
+          // Construct Efficy URL with all available data
+          const params = new URLSearchParams({
+            'source': 'cadastre',
+            'guid': pointData.guid || '',
+            'address': address,
+            'street_fr': pointData.street_fr || '',
+            'street_nl': pointData.street_nl || '',
+            'street_de': pointData.street_de || '',
+            'number': pointData.number || '',
+            'postcode': pointData.postcode || '',
+            'town_fr': pointData.town_fr || '',
+            'town_nl': pointData.town_nl || '',
+            'town_de': pointData.town_de || '',
+            'country': pointData.country || '',
+            'building_guid': pointData.building_guid || '',
+            'parcel_key': parcelData ? parcelData.parcelkey : '',
+            'parcel_area': parcelArea,
+            'building_area': buildingArea,
+            'asset_class': assetClass,
+            'coordinates': pointData.x && pointData.y ? pointData.x + ',' + pointData.y : ''
+          });
           
-          // Construct URL with comprehensive parameters
-          const efficyUrl = 'https://efficy.cbre.be/crm/view/Prop/new?' + 
-            'guid=' + encodeURIComponent(pointData?.guid || '') +
-            '&address=' + encodeURIComponent(address) +
-            '&parcelkey=' + encodeURIComponent(parcelKey) +
-            '&area=' + encodeURIComponent(area) +
-            '&postcode=' + encodeURIComponent(pointData?.postcode || '') +
-            '&country=' + encodeURIComponent(pointData?.country || '') +
-            '&assetClass=' + encodeURIComponent(assetClass);
+          const efficyUrl = 'https://efficy.cbre.be/crm/view/Prop/new?' + params.toString();
           
+          console.log('🌐 Opening Efficy URL:', efficyUrl);
           window.open(efficyUrl, '_blank');
         }
         
@@ -229,8 +244,8 @@ export const createCadastrePopupContent = () => {
           
           let address = '';
           
-          // Street
-          const street = pointData.street_nl || pointData.street_fr || pointData.street_de;
+          // Street and number
+          const street = pointData.street_fr || pointData.street_nl || pointData.street_de;
           if (street && pointData.number) {
             address = street + ' ' + pointData.number;
           } else if (street) {
@@ -238,7 +253,7 @@ export const createCadastrePopupContent = () => {
           }
           
           // City and postcode
-          const city = pointData.town_nl || pointData.town_fr || pointData.town_de;
+          const city = pointData.town_fr || pointData.town_nl || pointData.town_de;
           if (city) {
             if (address) address += ', ';
             if (pointData.postcode) {
@@ -246,6 +261,11 @@ export const createCadastrePopupContent = () => {
             } else {
               address += city;
             }
+          }
+          
+          // Country
+          if (pointData.country && pointData.country !== 'BEL') {
+            address += ', ' + pointData.country;
           }
           
           return address || 'Address not available';
@@ -257,7 +277,7 @@ export const createCadastrePopupContent = () => {
           if (areaM2 >= 10000) {
             return (areaM2 / 10000).toFixed(2) + ' hectares';
           } else {
-            return areaM2.toLocaleString() + ' m²';
+            return Math.round(areaM2).toLocaleString() + ' m²';
           }
         }
       </script>
