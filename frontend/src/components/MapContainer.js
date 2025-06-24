@@ -40,7 +40,8 @@ const MapContainer = ({ selectedAsset }) => {
     createCadastreLayer,
     createBuildingsLayer,
     addBuildingsToMap,
-    updateCadastreVisibility
+    updateCadastreVisibility,
+    setupCadastreClickHandling // ✅ Add the new click handling function
   } = useMapLayers();
 
   const {
@@ -53,9 +54,12 @@ const MapContainer = ({ selectedAsset }) => {
     calculateQualityDistribution
   } = useBuildingData();
 
+  // ✅ V2 UPDATE: Get debounced search props
   const {
     qualityFilters,
     searchTerm,
+    searchInput, // What user is typing
+    isSearching, // Whether search is pending
     handleQualityFilterToggle,
     handleSearchChange,
     handleClearSearch,
@@ -80,8 +84,30 @@ const MapContainer = ({ selectedAsset }) => {
         const cadastre = await createCadastreLayer();
         const buildingsLayerInstance = await createBuildingsLayer();
         
+        console.log('✅ Layers created:', {
+          cadastre: cadastre,
+          buildings: buildingsLayerInstance
+        });
+        
         // Initialize map with layers
-        await initializeMap(cadastre, buildingsLayerInstance);
+        const { map, view } = await initializeMap(cadastre, buildingsLayerInstance);
+        
+        console.log('✅ Map initialized:', {
+          map: map,
+          view: view
+        });
+        
+        // ✅ Set up cadastre click handling after map is ready
+        if (cadastre && view) {
+          console.log('🎯 Setting up cadastre click handling...', {
+            cadastreLayer: cadastre,
+            view: view,
+            hasSetupFunction: !!setupCadastreClickHandling
+          });
+          setupCadastreClickHandling(view, cadastre);
+        } else {
+          console.warn('❌ Cannot set up cadastre click handling - missing cadastre layer or view');
+        }
         
         // Load building data after map is ready
         setTimeout(async () => {
@@ -160,7 +186,9 @@ const MapContainer = ({ selectedAsset }) => {
       {isMapReady && (
         <LayerControl
           isProcessing={isProcessing}
-          searchTerm={searchTerm}
+          searchTerm={searchTerm} // Actual search term for filtering
+          searchInput={searchInput} // ✅ V2 UPDATE: What user is typing
+          isSearching={isSearching} // ✅ V2 UPDATE: Search pending state
           onSearchChange={handleSearchChange}
           onClearSearch={handleClearSearch}
           buildings={buildings}

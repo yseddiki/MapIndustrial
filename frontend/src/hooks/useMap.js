@@ -75,12 +75,27 @@ export const useMap = (mapContainerRef) => {
         }
       });
 
+      // ✅ V2 UPDATE: Simplified popup behavior for all initializations
+      view.popup.dockEnabled = false;  // No docking
+      view.popup.collapseEnabled = false;  // No collapse
+      view.popup.spinnerEnabled = false;  // No loading spinner
+      view.popup.highlightEnabled = true;  // Keep highlight for clarity
+      view.popup.autoOpenEnabled = true;  // Auto open on click
+      view.popup.actions = [];  // Remove all complex actions
+
+      console.log('✅ V2: Simplified popup configuration applied:', {
+        dockEnabled: view.popup.dockEnabled,
+        collapseEnabled: view.popup.collapseEnabled,
+        spinnerEnabled: view.popup.spinnerEnabled,
+        actionsCount: view.popup.actions.length
+      });
+
       // Store view reference
       viewRef.current = view;
 
       // Handle view ready event
       view.when(() => {
-        console.log('Map loaded successfully');
+        console.log('Map loaded successfully with simplified popups');
         setIsMapReady(true);
       }, (error) => {
         console.error('Map view failed to load:', error);
@@ -140,10 +155,15 @@ export const useMap = (mapContainerRef) => {
         zoom: CONFIG.MAP.ZOOM
       });
       
-      // Set popup behavior on the view
+      // ✅ V2 UPDATE: Apply same simplified popup behavior to fallback basemap
       view.popup.dockEnabled = false;
       view.popup.collapseEnabled = false;
+      view.popup.spinnerEnabled = false;
+      view.popup.highlightEnabled = true;
+      view.popup.autoOpenEnabled = true;
+      view.popup.actions = [];
 
+      console.log('✅ V2: Simplified popup configuration applied to fallback map');
 
       view.when(() => {
         setIsMapReady(true);

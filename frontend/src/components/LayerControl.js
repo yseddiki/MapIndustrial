@@ -5,6 +5,8 @@ import React from 'react';
 const LayerControl = ({
   isProcessing,
   searchTerm,
+  searchInput, // ✅ V2 UPDATE: What user is currently typing
+  isSearching, // ✅ V2 UPDATE: Whether search is pending
   onSearchChange,
   onClearSearch,
   buildings,
@@ -28,17 +30,23 @@ const LayerControl = ({
           <input
             type="text"
             placeholder="Search by name, address, ID..."
-            value={searchTerm}
+            value={searchInput} // ✅ V2 UPDATE: Use searchInput (what user is typing)
             onChange={onSearchChange}
             className="search-input"
           />
-          {searchTerm && (
+          {searchInput && (
             <button onClick={onClearSearch} className="clear-search-btn">
               ✕
             </button>
           )}
         </div>
-        {searchTerm && (
+        {/* ✅ V2 UPDATE: Show search status */}
+        {isSearching && searchInput && (
+          <p className="search-results" style={{ color: '#DBD99A', fontStyle: 'italic' }}>
+            ⏳ Searching...
+          </p>
+        )}
+        {!isSearching && searchTerm && (
           <p className="search-results">
             Found {buildings.length} building{buildings.length !== 1 ? 's' : ''}
           </p>
@@ -139,7 +147,12 @@ const LayerControl = ({
                 checked={qualityFilters.GREY}
                 onChange={() => onQualityFilterToggle('GREY')}
               />
-              <div className="quality-dot" style={{ backgroundColor: '#CAD1D3' }}></div>
+              {/* ✅ V2 UPDATE: White dot with black border for "Not in Efficy" */}
+              <div className="quality-dot" style={{ 
+                backgroundColor: '#FFFFFF', 
+                border: '1px solid #000000',
+                boxShadow: '0 0 0 1px rgba(0,0,0,0.3)' 
+              }}></div>
               <span className="quality-label">
                 Not in Efficy ! ({qualityDistribution.GREY})
               </span>
