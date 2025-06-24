@@ -1,15 +1,15 @@
 // src/services/CadastreService.js
 
 export class CadastreService {
-  static CADASTRE_BASE_URL = 'https://arcgiscenter.cbre.eu/arcgis/rest/services/Belgium/Cadastre/FeatureServer';
+  static CADASTRE_BASE_URL = 'https://arcgiscenter.cbre.eu/arcgis/rest/services/Belgium/Cadastre/MapServer';
   static SUBMARKET_BASE_URL = 'https://arcgiscenter.cbre.eu/arcgis/rest/services/Hosted/Submarkets_Arrondissements_Provinces/FeatureServer';
   
-  // Layer endpoints (matches your Efficy backend)
+  // ✅ UPDATED: Layer endpoints using MapServer instead of FeatureServer
   static LAYERS = {
     PARCELS: `${this.CADASTRE_BASE_URL}/0`,      // Parcel data
     BUILDINGS: `${this.CADASTRE_BASE_URL}/1`,    // Building data  
     POINTS: `${this.CADASTRE_BASE_URL}/2`,       // Point data (what we click on)
-    SUBMARKETS: `${this.SUBMARKET_BASE_URL}/0`   // Submarket data
+    SUBMARKETS: `${this.SUBMARKET_BASE_URL}/0`   // Submarket data (still FeatureServer)
   };
 
   /**

@@ -15,7 +15,7 @@ export const CONFIG = {
   ARCGIS: {
     API_URL: 'https://js.arcgis.com/4.28/',
     CSS_URL: 'https://js.arcgis.com/4.28/esri/themes/light/main.css',
-    // ✅ V2 UPDATE: Use FeatureServer for better querying capabilities
-    CADASTRE_LAYER_URL: 'https://arcgiscenter.cbre.eu/arcgis/rest/services/Belgium/Cadastre/FeatureServer/2'
+    // ✅ UPDATED: Use MapServer instead of FeatureServer as requested
+    CADASTRE_LAYER_URL: 'https://arcgiscenter.cbre.eu/arcgis/rest/services/Belgium/Cadastre/MapServer/2'
   }
 };
