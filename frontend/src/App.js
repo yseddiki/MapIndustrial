@@ -4,6 +4,8 @@ import { MapContainer } from './components';
 
 const App = () => {
   const [selectedAsset, setSelectedAsset] = useState(null);
+  const [preSelectedAssetClass, setPreSelectedAssetClass] = useState(null);
+  const [preSelectedSubAssetClass, setPreSelectedSubAssetClass] = useState(null);
 
   // Asset classes mapping
   const assetClasses = {
@@ -38,9 +40,19 @@ const App = () => {
   };
 
   useEffect(() => {
-    // Get asset class from URL parameters
+    // Get both asset class and sub-asset class from URL parameters
     const urlParams = new URLSearchParams(window.location.search);
-    const assetClassParam = urlParams.get('assetClass') 
+    const assetClassParam = urlParams.get('assetClass');
+    const subAssetClassParam = urlParams.get('subAssetClass');
+    
+    console.log('🎯 URL Parameters extracted:', {
+      assetClass: assetClassParam,
+      subAssetClass: subAssetClassParam
+    });
+    
+    // Store URL parameters for passing to components
+    setPreSelectedAssetClass(assetClassParam);
+    setPreSelectedSubAssetClass(subAssetClassParam);
     
     // Default to industrial if no parameter or invalid parameter
     const assetKey = assetClassParam && assetClasses[assetClassParam.toLowerCase()] 
@@ -50,6 +62,7 @@ const App = () => {
     const asset = assetClasses[assetKey];
     
     console.log('🎯 Asset class from URL:', assetClassParam);
+    console.log('🎯 Sub-asset class from URL:', subAssetClassParam);
     console.log('🎯 Using asset class:', asset);
     
     setSelectedAsset(asset);
@@ -67,7 +80,13 @@ const App = () => {
     );
   }
 
-  return <MapContainer selectedAsset={selectedAsset} />;
+  return (
+    <MapContainer 
+      selectedAsset={selectedAsset} 
+      preSelectedAssetClass={preSelectedAssetClass}
+      preSelectedSubAssetClass={preSelectedSubAssetClass}
+    />
+  );
 };
 
 export default App;

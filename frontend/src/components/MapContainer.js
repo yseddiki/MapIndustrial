@@ -25,12 +25,18 @@ const MapContainer = ({ selectedAsset, preSelectedAssetClass, preSelectedSubAsse
   const [selectedSubmarketData, setSelectedSubmarketData] = useState(null);
   const [submarketVisible, setSubmarketVisible] = useState(false);
   
-  // ✅ NEW: Log URL parameters for debugging
+  // ✅ UPDATED: Log URL parameters for debugging
   useEffect(() => {
     console.log('🎯 MapContainer received URL parameters:', {
       assetClass: preSelectedAssetClass,
       subAssetClass: preSelectedSubAssetClass
     });
+    
+    if (preSelectedAssetClass || preSelectedSubAssetClass) {
+      console.log('✅ URL parameters will be passed to CadastreModal for property creation');
+    } else {
+      console.log('⚠️ No URL parameters provided - property creation will require manual configuration');
+    }
   }, [preSelectedAssetClass, preSelectedSubAssetClass]);
   
   // Custom hooks
@@ -93,7 +99,11 @@ const MapContainer = ({ selectedAsset, preSelectedAssetClass, preSelectedSubAsse
   // Set up global modal handlers
   useEffect(() => {
     window.openCadastreModal = (pointData) => {
-      console.log('🎯 Opening cadastre modal with point data:', pointData);
+      console.log('🎯 Opening cadastre modal with point data and URL parameters:', {
+        pointData,
+        preSelectedAssetClass,
+        preSelectedSubAssetClass
+      });
       setSelectedCadastrePoint(pointData);
       setIsCadastreModalOpen(true);
     };
@@ -108,7 +118,7 @@ const MapContainer = ({ selectedAsset, preSelectedAssetClass, preSelectedSubAsse
       window.openCadastreModal = null;
       window.openSubmarketModal = null;
     };
-  }, []);
+  }, [preSelectedAssetClass, preSelectedSubAssetClass]);
 
   // Handle modal close functions
   const handleCadastreModalClose = () => {
@@ -160,7 +170,7 @@ const MapContainer = ({ selectedAsset, preSelectedAssetClass, preSelectedSubAsse
         
         // Set up click handling for both cadastre and submarket layers after map is ready
         if (cadastre && view) {
-          console.log('🎯 Setting up cadastre click handling for modal...');
+          console.log('🎯 Setting up cadastre click handling for modal with URL parameters...');
           setupCadastreClickHandling(view, cadastre, submarketLayerInstance);
         } else {
           console.warn('❌ Cannot set up cadastre click handling - missing cadastre layer or view');

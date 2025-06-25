@@ -1,4 +1,4 @@
-// src/components/CadastreModal.js - WITHOUT PROPERTY TYPE SELECTION
+// src/components/CadastreModal.js - WITHOUT ASSET CLASS SELECTION UI
 
 import React, { useState, useEffect } from 'react';
 import { CadastreService } from '../services/CadastreService';
@@ -8,13 +8,10 @@ const CadastreModal = ({ isOpen, onClose, cadastrePoint, preSelectedAssetClass, 
   const [isLoading, setIsLoading] = useState(false);
   const [cadastreData, setCadastreData] = useState(null);
   const [error, setError] = useState(null);
-  // ✅ NEW: Asset class and sub-asset class selection
-  const [selectedAssetClasses, setSelectedAssetClasses] = useState([]);
-  const [selectedSubAssetClasses, setSelectedSubAssetClasses] = useState([]);
   const [isCreating, setIsCreating] = useState(false);
   const [creationResult, setCreationResult] = useState(null);
 
-  // ✅ NEW: Asset class data
+  // ✅ UPDATED: Asset class data for reference only (no UI selection)
   const assetClasses = [
     { id: 1, name: 'Office' },
     { id: 2, name: 'Retail' },
@@ -22,7 +19,7 @@ const CadastreModal = ({ isOpen, onClose, cadastrePoint, preSelectedAssetClass, 
     { id: 4, name: 'Industrial & Logistics' }
   ];
 
-  // ✅ NEW: Sub-asset class data with filtering by asset class
+  // ✅ UPDATED: Sub-asset class data for reference only (no UI selection)
   const subAssetClasses = [
     { id: 1, assetClassId: 2, name: 'Highstreet' },
     { id: 2, assetClassId: 2, name: 'Out-of-town stand-alone' },
@@ -59,7 +56,7 @@ const CadastreModal = ({ isOpen, onClose, cadastrePoint, preSelectedAssetClass, 
     { id: 33, assetClassId: 12, name: 'Undefined' }
   ];
 
-  // ✅ NEW: Asset class name to ID mapping for URL parameters
+  // ✅ UPDATED: Asset class name to ID mapping for URL parameters
   const assetClassNameToId = {
     'office': 1,
     'retail': 2,
@@ -67,41 +64,31 @@ const CadastreModal = ({ isOpen, onClose, cadastrePoint, preSelectedAssetClass, 
     'industrial': 4
   };
 
-  // ✅ NEW: Get available sub-asset classes based on selected asset classes
-  const getAvailableSubAssetClasses = () => {
-    if (selectedAssetClasses.length === 0) return [];
-    return subAssetClasses.filter(sub => 
-      selectedAssetClasses.includes(sub.assetClassId)
-    );
-  };
+  // ✅ UPDATED: Get asset class and sub-asset class IDs from URL parameters
+  const getAssetClassesFromURL = () => {
+    let assetClassIds = [];
+    let subAssetClassIds = [];
 
-  // ✅ NEW: Pre-populate selections based on URL parameters
-  useEffect(() => {
-    if (preSelectedAssetClass || preSelectedSubAssetClass) {
-      console.log('🎯 Pre-populating selections from URL:', {
-        assetClass: preSelectedAssetClass,
-        subAssetClass: preSelectedSubAssetClass
-      });
-
-      // Pre-select asset class
-      if (preSelectedAssetClass) {
-        const assetClassId = assetClassNameToId[preSelectedAssetClass.toLowerCase()];
-        if (assetClassId) {
-          setSelectedAssetClasses([assetClassId]);
-          console.log(`✅ Pre-selected asset class: ${preSelectedAssetClass} (ID: ${assetClassId})`);
-        }
-      }
-
-      // Pre-select sub-asset class
-      if (preSelectedSubAssetClass) {
-        const subAssetClassId = parseInt(preSelectedSubAssetClass);
-        if (!isNaN(subAssetClassId)) {
-          setSelectedSubAssetClasses([subAssetClassId]);
-          console.log(`✅ Pre-selected sub-asset class: ID ${subAssetClassId}`);
-        }
+    // Convert asset class name to ID
+    if (preSelectedAssetClass) {
+      const assetClassId = assetClassNameToId[preSelectedAssetClass.toLowerCase()];
+      if (assetClassId) {
+        assetClassIds = [assetClassId];
+        console.log(`✅ Asset class from URL: ${preSelectedAssetClass} (ID: ${assetClassId})`);
       }
     }
-  }, [preSelectedAssetClass, preSelectedSubAssetClass]);
+
+    // Convert sub-asset class ID
+    if (preSelectedSubAssetClass) {
+      const subAssetClassId = parseInt(preSelectedSubAssetClass);
+      if (!isNaN(subAssetClassId)) {
+        subAssetClassIds = [subAssetClassId];
+        console.log(`✅ Sub-asset class from URL: ID ${subAssetClassId}`);
+      }
+    }
+
+    return { assetClassIds, subAssetClassIds };
+  };
 
   // Load data when modal opens
   useEffect(() => {
@@ -118,9 +105,6 @@ const CadastreModal = ({ isOpen, onClose, cadastrePoint, preSelectedAssetClass, 
       setIsLoading(false);
       setIsCreating(false);
       setCreationResult(null);
-      // ✅ NEW: Reset asset class selections
-      setSelectedAssetClasses([]);
-      setSelectedSubAssetClasses([]);
     }
   }, [isOpen]);
 
@@ -153,16 +137,13 @@ const CadastreModal = ({ isOpen, onClose, cadastrePoint, preSelectedAssetClass, 
     }
   };
 
-  // ✅ UPDATED: Create property with asset class validation
+  // ✅ UPDATED: Create property using URL parameters (no user selection required)
   const handleCreateProperty = async () => {
-    // ✅ NEW: Asset class validation
-    if (selectedAssetClasses.length === 0) {
-      window.alert('⚠️ Please select at least one asset class first!');
-      return;
-    }
+    const { assetClassIds, subAssetClassIds } = getAssetClassesFromURL();
 
-    if (selectedSubAssetClasses.length === 0) {
-      window.alert('⚠️ Please select at least one sub-asset class first!');
+    // ✅ UPDATED: Validate URL parameters are present
+    if (!preSelectedAssetClass && !preSelectedSubAssetClass) {
+      window.alert('⚠️ No asset class information provided in URL. Please access this page with proper URL parameters.');
       return;
     }
 
@@ -179,16 +160,26 @@ const CadastreModal = ({ isOpen, onClose, cadastrePoint, preSelectedAssetClass, 
       return;
     }
 
-    // Confirm creation with user
+    // ✅ UPDATED: Build confirmation message with URL parameters
     const address = PropertyService.formatAddress(cadastreData.point);
-    const assetClassNames = selectedAssetClasses.map(id => 
+    const assetClassNames = assetClassIds.map(id => 
       assetClasses.find(ac => ac.id === id)?.name
-    ).join(', ');
-    const subAssetClassNames = selectedSubAssetClasses.map(id => 
+    ).filter(Boolean).join(', ');
+    const subAssetClassNames = subAssetClassIds.map(id => 
       subAssetClasses.find(sac => sac.id === id)?.name
-    ).join(', ');
+    ).filter(Boolean).join(', ');
     
-    const confirmMessage = `🏗️ Create Property in Efficy?\n\nAddress: ${address}\nAsset Classes: ${assetClassNames}\nSub-Asset Classes: ${subAssetClassNames}\n\nThis will create a new property in your Efficy CRM system.`;
+    let confirmMessage = `🏗️ Create Property in Efficy?\n\nAddress: ${address}`;
+    
+    if (assetClassNames) {
+      confirmMessage += `\nAsset Classes: ${assetClassNames}`;
+    }
+    
+    if (subAssetClassNames) {
+      confirmMessage += `\nSub-Asset Classes: ${subAssetClassNames}`;
+    }
+    
+    confirmMessage += `\n\nThis will create a new property in your Efficy CRM system.`;
     
     if (!window.confirm(confirmMessage)) {
       return;
@@ -198,17 +189,18 @@ const CadastreModal = ({ isOpen, onClose, cadastrePoint, preSelectedAssetClass, 
     setCreationResult(null);
 
     try {
-      console.log('🏗️ Creating property via PropertyService API with data:', {
+      console.log('🏗️ Creating property via PropertyService API with URL parameters:', {
         cadastreData,
-        assetClasses: selectedAssetClasses,
-        subAssetClasses: selectedSubAssetClasses
+        assetClasses: assetClassIds,
+        subAssetClasses: subAssetClassIds,
+        urlParams: { assetClass: preSelectedAssetClass, subAssetClass: preSelectedSubAssetClass }
       });
 
-      // ✅ UPDATED: Create property with asset classes
+      // ✅ UPDATED: Create property with URL parameter asset classes
       const result = await PropertyService.createProperty(
         cadastreData, 
-        selectedAssetClasses, 
-        selectedSubAssetClasses
+        assetClassIds, 
+        subAssetClassIds
       );
 
       setCreationResult(result);
@@ -217,7 +209,13 @@ const CadastreModal = ({ isOpen, onClose, cadastrePoint, preSelectedAssetClass, 
         console.log('✅ Property created successfully:', result);
         
         // Success alert with property details
-        const successMessage = `🎉 Property Created Successfully!\n\nProperty ID: ${result.propertyId || 'Generated'}\nAddress: ${address}\nAsset Classes: ${assetClassNames}\n\nThe property has been added to your Efficy CRM system.`;
+        let successMessage = `🎉 Property Created Successfully!\n\nProperty ID: ${result.propertyId || 'Generated'}\nAddress: ${address}`;
+        
+        if (assetClassNames) {
+          successMessage += `\nAsset Classes: ${assetClassNames}`;
+        }
+        
+        successMessage += `\n\nThe property has been added to your Efficy CRM system.`;
         window.alert(successMessage);
         
         // Auto-open in Efficy after a brief delay
@@ -255,47 +253,6 @@ const CadastreModal = ({ isOpen, onClose, cadastrePoint, preSelectedAssetClass, 
     } finally {
       setIsCreating(false);
     }
-  };
-
-  // ✅ NEW: Handle asset class selection
-  const handleAssetClassToggle = (assetClassId) => {
-    setSelectedAssetClasses(prev => {
-      const isSelected = prev.includes(assetClassId);
-      let newSelection;
-      
-      if (isSelected) {
-        newSelection = prev.filter(id => id !== assetClassId);
-      } else {
-        newSelection = [...prev, assetClassId];
-      }
-      
-      // Clear sub-asset classes if no asset classes are selected
-      // or filter out sub-asset classes that don't belong to selected asset classes
-      if (newSelection.length === 0) {
-        setSelectedSubAssetClasses([]);
-      } else {
-        setSelectedSubAssetClasses(prevSub => 
-          prevSub.filter(subId => {
-            const subAssetClass = subAssetClasses.find(sac => sac.id === subId);
-            return subAssetClass && newSelection.includes(subAssetClass.assetClassId);
-          })
-        );
-      }
-      
-      return newSelection;
-    });
-  };
-
-  // ✅ NEW: Handle sub-asset class selection
-  const handleSubAssetClassToggle = (subAssetClassId) => {
-    setSelectedSubAssetClasses(prev => {
-      const isSelected = prev.includes(subAssetClassId);
-      if (isSelected) {
-        return prev.filter(id => id !== subAssetClassId);
-      } else {
-        return [...prev, subAssetClassId];
-      }
-    });
   };
 
   // Retry function with reset
@@ -356,6 +313,21 @@ const CadastreModal = ({ isOpen, onClose, cadastrePoint, preSelectedAssetClass, 
     }
   };
 
+  // ✅ NEW: Helper function to get display names for URL parameters
+  const getDisplayNames = () => {
+    const { assetClassIds, subAssetClassIds } = getAssetClassesFromURL();
+    
+    const assetClassNames = assetClassIds.map(id => 
+      assetClasses.find(ac => ac.id === id)?.name
+    ).filter(Boolean);
+    
+    const subAssetClassNames = subAssetClassIds.map(id => 
+      subAssetClasses.find(sac => sac.id === id)?.name
+    ).filter(Boolean);
+    
+    return { assetClassNames, subAssetClassNames };
+  };
+
   if (!isOpen) return null;
 
   return (
@@ -404,6 +376,53 @@ const CadastreModal = ({ isOpen, onClose, cadastrePoint, preSelectedAssetClass, 
                 <div style={{ fontSize: '16px', fontWeight: 'bold' }}>Not in Efficy</div>
                 <div style={{ fontSize: '12px', opacity: 0.8 }}>Cadastre Property with Submarket Data</div>
               </div>
+
+              {/* ✅ NEW: URL Parameter Information */}
+              {(preSelectedAssetClass || preSelectedSubAssetClass) && (
+                <div className="modal-section" style={{ 
+                  background: 'linear-gradient(135deg, #f0f8ff 0%, #e6f3ff 100%)', 
+                  border: '2px solid #17E88F',
+                  marginBottom: '1.5rem'
+                }}>
+                  <h4 style={{ color: '#003F2D' }}>🎯 Property Configuration</h4>
+                  <div style={{ 
+                    background: 'rgba(23, 232, 143, 0.1)', 
+                    padding: '0.75rem', 
+                    borderRadius: '6px', 
+                    marginBottom: '1rem',
+                    border: '1px solid rgba(23, 232, 143, 0.3)'
+                  }}>
+                    <div style={{ fontSize: '0.9rem', fontWeight: '600', color: '#003F2D', marginBottom: '0.5rem' }}>
+                      🔗 Configuration from URL Parameters
+                    </div>
+                    {(() => {
+                      const { assetClassNames, subAssetClassNames } = getDisplayNames();
+                      return (
+                        <div style={{ fontSize: '0.9rem', color: '#435254' }}>
+                          {assetClassNames.length > 0 && (
+                            <div>
+                              <strong>Asset Class:</strong> {assetClassNames.join(', ')}
+                            </div>
+                          )}
+                          {subAssetClassNames.length > 0 && (
+                            <div>
+                              <strong>Sub-Asset Class:</strong> {subAssetClassNames.join(', ')}
+                            </div>
+                          )}
+                          {assetClassNames.length === 0 && subAssetClassNames.length === 0 && (
+                            <div style={{ color: '#999', fontStyle: 'italic' }}>
+                              No asset class configuration provided
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })()}
+                  </div>
+                  <div style={{ fontSize: '0.8rem', color: '#666', fontStyle: 'italic' }}>
+                    💡 Asset class configuration is determined by URL parameters and cannot be changed here.
+                  </div>
+                </div>
+              )}
 
               {/* Point Information */}
               {cadastreData.point && (
@@ -522,145 +541,6 @@ const CadastreModal = ({ isOpen, onClose, cadastrePoint, preSelectedAssetClass, 
                 </div>
               )}
 
-              {/* ✅ ENHANCED: Asset Class Selection with Pre-selection Indicator */}
-              <div className="modal-section">
-                <div className="asset-class-section-title">
-                  <h4>🏗️ Asset Classes</h4>
-                  <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
-                    {(preSelectedAssetClass || preSelectedSubAssetClass) && (
-                      <span style={{ 
-                        fontSize: '0.7rem', 
-                        color: '#17E88F', 
-                        background: 'rgba(23, 232, 143, 0.1)',
-                        padding: '0.25rem 0.5rem',
-                        borderRadius: '12px',
-                        border: '1px solid rgba(23, 232, 143, 0.3)'
-                      }}>
-                        🔗 Pre-selected from CRM
-                      </span>
-                    )}
-                    {selectedAssetClasses.length > 0 && (
-                      <span className="asset-class-count">
-                        {selectedAssetClasses.length} selected
-                      </span>
-                    )}
-                  </div>
-                </div>
-                <p className="asset-class-help-text">
-                  {preSelectedAssetClass 
-                    ? `Pre-selected from CRM: ${preSelectedAssetClass}. You can modify the selection below:`
-                    : 'Select one or more asset classes for this property:'
-                  }
-                </p>
-                <div className="asset-class-selection">
-                  {assetClasses.map(assetClass => (
-                    <div 
-                      key={assetClass.id} 
-                      className={`asset-class-item ${
-                        selectedAssetClasses.includes(assetClass.id) ? 'selected' : ''
-                      } ${isCreating ? 'disabled' : ''}`}
-                      onClick={() => !isCreating && handleAssetClassToggle(assetClass.id)}
-                    >
-                      <input
-                        type="checkbox"
-                        checked={selectedAssetClasses.includes(assetClass.id)}
-                        onChange={() => handleAssetClassToggle(assetClass.id)}
-                        className="asset-class-checkbox"
-                        disabled={isCreating}
-                      />
-                      <span className="asset-class-name">{assetClass.name}</span>
-                      {/* ✅ NEW: Pre-selection indicator */}
-                      {preSelectedAssetClass && assetClassNameToId[preSelectedAssetClass.toLowerCase()] === assetClass.id && (
-                        <span style={{ 
-                          marginLeft: 'auto', 
-                          fontSize: '0.7rem', 
-                          color: '#17E88F',
-                          fontWeight: '600'
-                        }}>
-                          🔗 CRM
-                        </span>
-                      )}
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              {/* ✅ ENHANCED: Sub-Asset Class Selection with Pre-selection Indicator */}
-              {selectedAssetClasses.length > 0 && (
-                <div className="modal-section">
-                  <div className="asset-class-section-title">
-                    <h4>🎯 Sub-Asset Classes</h4>
-                    <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
-                      {preSelectedSubAssetClass && (
-                        <span style={{ 
-                          fontSize: '0.7rem', 
-                          color: '#17E88F', 
-                          background: 'rgba(23, 232, 143, 0.1)',
-                          padding: '0.25rem 0.5rem',
-                          borderRadius: '12px',
-                          border: '1px solid rgba(23, 232, 143, 0.3)'
-                        }}>
-                          🔗 Sub-class pre-selected
-                        </span>
-                      )}
-                      {selectedSubAssetClasses.length > 0 && (
-                        <span className="asset-class-count">
-                          {selectedSubAssetClasses.length} selected
-                        </span>
-                      )}
-                    </div>
-                  </div>
-                  <p className="asset-class-help-text">
-                    {preSelectedSubAssetClass 
-                      ? `Pre-selected sub-asset class ID: ${preSelectedSubAssetClass}. You can modify the selection below:`
-                      : 'Select one or more sub-asset classes for the selected asset classes:'
-                    }
-                  </p>
-                  <div className="sub-asset-class-list">
-                    {getAvailableSubAssetClasses().map(subAssetClass => (
-                      <div 
-                        key={subAssetClass.id} 
-                        className={`sub-asset-class-item ${
-                          selectedSubAssetClasses.includes(subAssetClass.id) ? 'selected' : ''
-                        } ${isCreating ? 'disabled' : ''}`}
-                        onClick={() => !isCreating && handleSubAssetClassToggle(subAssetClass.id)}
-                      >
-                        <input
-                          type="checkbox"
-                          checked={selectedSubAssetClasses.includes(subAssetClass.id)}
-                          onChange={() => handleSubAssetClassToggle(subAssetClass.id)}
-                          className="asset-class-checkbox"
-                          disabled={isCreating}
-                        />
-                        <span className="asset-class-name">{subAssetClass.name}</span>
-                        <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                          {/* ✅ NEW: Pre-selection indicator */}
-                          {preSelectedSubAssetClass && parseInt(preSelectedSubAssetClass) === subAssetClass.id && (
-                            <span style={{ 
-                              fontSize: '0.7rem', 
-                              color: '#17E88F',
-                              fontWeight: '600'
-                            }}>
-                              🔗 CRM
-                            </span>
-                          )}
-                          <span className="sub-asset-class-parent">
-                            {assetClasses.find(ac => ac.id === subAssetClass.assetClassId)?.name}
-                          </span>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                  {getAvailableSubAssetClasses().length === 0 && (
-                    <p style={{ fontSize: '0.9rem', color: '#999', fontStyle: 'italic', textAlign: 'center', padding: '1rem' }}>
-                      No sub-asset classes available for selected asset classes.
-                    </p>
-                  )}
-                </div>
-              )}
-
-              {/* ✅ REMOVED: Asset Class Selection Section - No longer needed */}
-
               {/* Property Creation Result Display */}
               {creationResult && (
                 <div className="modal-section" style={{ 
@@ -731,7 +611,7 @@ const CadastreModal = ({ isOpen, onClose, cadastrePoint, preSelectedAssetClass, 
               {creationResult?.success ? 'Close' : 'Cancel'}
             </button>
             
-            {/* ✅ UPDATED: Dynamic Action Button - no asset class validation */}
+            {/* ✅ UPDATED: Dynamic Action Button - uses URL parameters */}
             {isCreating ? (
               <button 
                 className="modal-btn modal-btn-primary" 
@@ -770,8 +650,7 @@ const CadastreModal = ({ isOpen, onClose, cadastrePoint, preSelectedAssetClass, 
               <button 
                 className="modal-btn modal-btn-primary" 
                 onClick={handleCreateProperty}
-                // ✅ UPDATED: Validate both asset class and sub-asset class selection
-                disabled={selectedAssetClasses.length === 0 || selectedSubAssetClasses.length === 0}
+                disabled={!preSelectedAssetClass && !preSelectedSubAssetClass}
               >
                 🏗️ Create Property in Efficy
               </button>

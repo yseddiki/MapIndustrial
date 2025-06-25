@@ -1,4 +1,4 @@
-// src/services/PropertyService.js - UPDATED TO HANDLE NO ASSET CLASS
+// src/services/PropertyService.js - FIXED TO USE CORRECT CADASTRE COORDINATES
 
 import { CONFIG } from '../config/config';
 
@@ -21,8 +21,6 @@ export class PropertyService {
       
       // Build the property data structure
       const propertyData = this.buildPropertyData(cadastreData, assetClassIds, subAssetClassIds);
-      
-      // ✅ REMOVED: Type validation - now handled in safeAddField
       
       console.log('📤 ========== SENDING TO EFFICY API ==========');
       console.log('🌐 API Endpoint:', CONFIG.API_ENDPOINTS.PROPERTY_API);
@@ -60,12 +58,39 @@ export class PropertyService {
       const result = await response.json();
       console.log('✅ API Success Response:', result);
       console.log('📥 ================================');
-      console.log('✅ Property created successfully:', result);
+      
+      // ✅ FIXED: Extract property ID from the correct location in API response
+      let propertyId = 'Unknown';
+      
+      if (result && result.result && result.result.key) {
+        propertyId = result.result.key;
+        console.log('✅ Property ID extracted from result.key:', propertyId);
+      } else if (result && result.key) {
+        propertyId = result.key;
+        console.log('✅ Property ID extracted from key:', propertyId);
+      } else if (result && result.K_PROPERTY) {
+        propertyId = result.K_PROPERTY;
+        console.log('✅ Property ID extracted from K_PROPERTY:', propertyId);
+      } else if (result && result.id) {
+        propertyId = result.id;
+        console.log('✅ Property ID extracted from id:', propertyId);
+      } else {
+        console.warn('⚠️ Property ID not found in expected locations:', {
+          'result.result.key': result?.result?.key,
+          'result.key': result?.key,
+          'result.K_PROPERTY': result?.K_PROPERTY,
+          'result.id': result?.id,
+          'resultKeys': Object.keys(result || {})
+        });
+      }
+      
+      console.log('✅ Property created successfully with ID:', propertyId);
       
       return {
         success: true,
         data: result,
-        propertyId: result.K_PROPERTY || result.id || 'Unknown'
+        propertyId: propertyId,
+        rawResponse: result // Keep full response for debugging
       };
 
     } catch (error) {
@@ -155,7 +180,7 @@ export class PropertyService {
 
     // ✅ ESSENTIAL FIELDS ONLY - No risky numeric fields
     if (point) {
-      console.log('📍 Processing essential point data only');
+      console.log('📍 Processing point data with correct coordinates');
       
       // ✅ COMPLETE: All address fields (strings)
       this.safeAddField(propertyData, 'F_ARCGIS_ADDRESS', point.guid, 'string');
@@ -176,12 +201,56 @@ export class PropertyService {
         console.log(`✅ Added country field 'F_COUNTRY': ${countryId} (from '${point.country}')`);
       }
       
-      // ✅ COORDINATES: Only add if they're valid numbers
-      if (point.x && point.y && !isNaN(point.x) && !isNaN(point.y)) {
-        propertyData.LONGITUDE = Number(point.x);
-        propertyData.LATITUDE = Number(point.y);
-        console.log(`✅ Added coordinates: ${propertyData.LONGITUDE}, ${propertyData.LATITUDE}`);
+      // ✅ CRITICAL FIX: ONLY use point.x and point.y - ignore all other coordinate sources
+      console.log('📍 ========== COORDINATE PROCESSING ==========');
+      console.log('🔍 Raw point data:', point);
+      console.log('🎯 ONLY using point.x and point.y coordinates:', {
+        'point.x': point.x,
+        'point.y': point.y,
+        'type_x': typeof point.x,
+        'type_y': typeof point.y
+      });
+      
+      // ✅ FORCE: Only use point.x/point.y - these are already WGS84
+      if (point.x !== undefined && point.y !== undefined && 
+          !isNaN(point.x) && !isNaN(point.y)) {
+        
+        // ✅ CRITICAL: point.x = longitude, point.y = latitude (WGS84)
+        const longitude = parseFloat(point.x);  // 4.991011619539775
+        const latitude = parseFloat(point.y);   // 50.581962689078644
+        
+        // ✅ FORCE: Set coordinates directly - no conversions, no other sources
+        propertyData.LONGITUDE = longitude;
+        propertyData.LATITUDE = latitude;
+        
+        console.log('✅ FORCED coordinates from point.x/point.y ONLY:');
+        console.log(`   📌 LONGITUDE: ${longitude} (from point.x)`);
+        console.log(`   📌 LATITUDE: ${latitude} (from point.y)`);
+        console.log('   🚫 IGNORING any geometry or other coordinate sources');
+        
+        // ✅ VALIDATION: Verify these are reasonable WGS84 coordinates for Belgium
+        if (longitude >= 2.5 && longitude <= 6.4 && latitude >= 49.5 && latitude <= 51.6) {
+          console.log('✅ Coordinates validated as WGS84 Belgium coordinates');
+        } else {
+          console.error('❌ COORDINATE ERROR: Values outside Belgium WGS84 range!', {
+            longitude,
+            latitude,
+            expected: 'longitude 2.5-6.4, latitude 49.5-51.6'
+          });
+        }
+        
+      } else {
+        console.error('❌ CRITICAL ERROR: point.x or point.y missing or invalid:', {
+          'point.x': point.x,
+          'point.y': point.y,
+          'x_undefined': point.x === undefined,
+          'y_undefined': point.y === undefined,
+          'x_isNaN': isNaN(point.x),
+          'y_isNaN': isNaN(point.y)
+        });
       }
+      
+      console.log('📍 ================================');
     }
 
     // ✅ COMPLETE: PARCEL DATA MAPPING with validation
@@ -275,7 +344,7 @@ export class PropertyService {
   }
 
   /**
-   * ✅ UPDATED: Build comprehensive MEMO with all cadastre data and asset classes
+   * ✅ UPDATED: Build comprehensive MEMO with correct coordinate information
    * @param {Object} cadastreData - Complete cadastre data
    * @param {Array} assetClassIds - Selected asset class IDs
    * @param {Array} subAssetClassIds - Selected sub-asset class IDs
@@ -323,9 +392,11 @@ export class PropertyService {
       point.town_de && memo.push(`City (DE): ${point.town_de}`);
       point.country && memo.push(`Country: ${point.country}`);
       
-      // Coordinates
+      // ✅ FIXED: Correct coordinate information
       if (point.x && point.y) {
-        memo.push(`Coordinates: ${point.x}, ${point.y}`);
+        memo.push(`Coordinates (WGS84): ${point.x}, ${point.y}`);
+        memo.push(`Longitude: ${point.x}`);
+        memo.push(`Latitude: ${point.y}`);
       }
       
       // Building reference

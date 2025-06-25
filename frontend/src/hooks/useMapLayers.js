@@ -1,4 +1,4 @@
-// src/hooks/useMapLayers.js - UPDATED WITH SUBMARKET LAYER
+// src/hooks/useMapLayers.js - FIXED TO USE GRAPHIC GEOMETRY COORDINATES
 
 import { useState, useCallback } from 'react';
 import { CONFIG } from '../config/config';
@@ -76,7 +76,7 @@ export const useMapLayers = () => {
     return layerInfo;
   }, []);
 
-  // ✅ NEW: Enhanced dynamic attribute extraction function with detailed logging
+  // ✅ FIXED: Extract attributes and FORCE use of graphic geometry coordinates
   const extractAttributesFromGraphic = useCallback((graphic, layerFields) => {
     console.log('📊 ============ EXTRACTING ATTRIBUTES ============');
     console.log('📊 Input graphic object:', graphic);
@@ -86,13 +86,7 @@ export const useMapLayers = () => {
     const geometry = graphic.geometry;
     
     console.log('📍 Raw graphic attributes object:', rawAttributes);
-    console.log('📍 Raw attributes type:', typeof rawAttributes);
-    console.log('📍 Raw attributes keys:', Object.keys(rawAttributes || {}));
-    console.log('📍 Raw attributes values:', Object.values(rawAttributes || {}));
-    
     console.log('🗺️ Graphic geometry object:', geometry);
-    console.log('🗺️ Geometry type:', geometry?.type);
-    console.log('🗺️ Geometry properties:', Object.keys(geometry || {}));
     
     // Extract all available attributes dynamically
     const extractedData = {};
@@ -105,16 +99,6 @@ export const useMapLayers = () => {
         extractedData[fieldName] = value;
         
         console.log(`📌 Field ${index + 1}/${layerFields.length}: ${fieldName} (${field.type}) = ${value}`);
-        console.log(`   📋 Field details:`, {
-          name: field.name,
-          alias: field.alias,
-          type: field.type,
-          length: field.length,
-          nullable: field.nullable,
-          editable: field.editable,
-          value: value,
-          valueType: typeof value
-        });
       });
     } else {
       // Fallback: extract all attributes as-is
@@ -125,45 +109,52 @@ export const useMapLayers = () => {
       });
     }
     
-    // Add geometry coordinates
+    // ✅ CRITICAL FIX: FORCE use of graphic geometry coordinates (WGS84)
     if (geometry) {
       console.log('📐 Processing geometry coordinates...');
-      if (geometry.longitude !== undefined && geometry.latitude !== undefined) {
-        extractedData.x = geometry.longitude;
-        extractedData.y = geometry.latitude;
-        console.log(`📐 Coordinates from geometry.longitude/latitude: ${geometry.longitude}, ${geometry.latitude}`);
-      } else if (geometry.x !== undefined && geometry.y !== undefined) {
-        extractedData.x = geometry.x;
-        extractedData.y = geometry.y;
-        console.log(`📐 Coordinates from geometry.x/y: ${geometry.x}, ${geometry.y}`);
-      } else {
-        console.log('⚠️ No recognizable coordinates found in geometry');
-      }
       
-      // Log all geometry properties
-      console.log('🗺️ All geometry properties:');
-      Object.keys(geometry).forEach(key => {
-        console.log(`   📐 geometry.${key} = ${geometry[key]} (${typeof geometry[key]})`);
-      });
+      // ✅ FORCE: Use geometry.longitude and geometry.latitude (these are WGS84)
+      if (geometry.longitude !== undefined && geometry.latitude !== undefined) {
+        extractedData.x = geometry.longitude;  // WGS84 longitude
+        extractedData.y = geometry.latitude;   // WGS84 latitude
+        
+        console.log(`✅ FORCED WGS84 coordinates from geometry:`, {
+          longitude: geometry.longitude,
+          latitude: geometry.latitude,
+          x: extractedData.x,
+          y: extractedData.y
+        });
+        
+        // ✅ VALIDATION: Ensure these are Belgium WGS84 coordinates
+        if (geometry.longitude >= 2.5 && geometry.longitude <= 6.4 && 
+            geometry.latitude >= 49.5 && geometry.latitude <= 51.6) {
+          console.log('✅ Coordinates validated as Belgium WGS84');
+        } else {
+          console.warn('⚠️ Coordinates outside Belgium bounds but proceeding');
+        }
+        
+      } else {
+        console.warn('⚠️ No longitude/latitude in geometry, cannot extract coordinates');
+      }
     } else {
       console.log('⚠️ No geometry found on graphic');
     }
     
     console.log('✅ ============ FINAL EXTRACTED DATA ============');
     console.log('✅ Extracted data object:', extractedData);
-    console.log('✅ Extracted data keys:', Object.keys(extractedData));
-    console.log('✅ Extracted data summary:');
-    Object.keys(extractedData).forEach(key => {
-      console.log(`   ✅ ${key}: ${extractedData[key]} (${typeof extractedData[key]})`);
+    console.log('✅ Coordinates that will be used:', {
+      x: extractedData.x,
+      y: extractedData.y,
+      source: 'graphic.geometry.longitude/latitude'
     });
     console.log('✅ ================================================');
     
     return extractedData;
   }, []);
 
-  // ✅ FIXED: Set up click handling for cadastre points with proper submarket intersection
+  // ✅ FIXED: Set up click handling for cadastre points with graphic geometry coordinates
   const setupCadastreClickHandling = useCallback((view, cadastreLayer, submarketLayerRef = null) => {
-    console.log('🎯 Setting up enhanced cadastre click handling with submarket intersection');
+    console.log('🎯 Setting up enhanced cadastre click handling with graphic geometry coordinates');
     
     view.on('click', async (event) => {
       try {
@@ -178,12 +169,23 @@ export const useMapLayers = () => {
         if (cadastreResults.length > 0) {
           const clickedGraphic = cadastreResults[0].graphic;
           
-          console.log('🎯 ✅ CADASTRE DOT CLICKED! Opening modal with submarket intersection...');
+          console.log('🎯 ✅ CADASTRE DOT CLICKED! Using graphic geometry coordinates...');
           
-          // Extract point data from the clicked graphic
+          // ✅ CRITICAL: Extract point data using graphic geometry coordinates
           const pointData = extractAttributesFromGraphic(clickedGraphic, cadastreLayer.fields);
           
-          console.log('📍 Extracted point data for modal:', pointData);
+          console.log('📍 Point data with WGS84 coordinates:', pointData);
+          
+          // ✅ VALIDATION: Ensure we have WGS84 coordinates
+          if (pointData.x && pointData.y) {
+            console.log('✅ WGS84 coordinates extracted successfully:', {
+              longitude: pointData.x,
+              latitude: pointData.y
+            });
+          } else {
+            console.error('❌ Failed to extract coordinates from graphic geometry');
+            return;
+          }
           
           // ✅ FIXED: Perform submarket intersection using the click coordinates directly
           let submarketData = null;
@@ -216,12 +218,7 @@ export const useMapLayers = () => {
                 submarketData = submarketQueryResult.features[0].attributes;
                 console.log('✅ Submarket intersection successful:', submarketData);
               } else {
-                console.log('⚠️ No submarket found at click location - this should not happen if submarkets are visible');
-                console.log('🔍 Debug info:', {
-                  clickPoint: clickPoint,
-                  submarketLayerVisible: submarketLayerRef.visible,
-                  submarketLayerLoaded: submarketLayerRef.loaded
-                });
+                console.log('⚠️ No submarket found at click location');
               }
               
             } catch (submarketError) {
@@ -236,6 +233,21 @@ export const useMapLayers = () => {
             ...pointData,
             submarketData: submarketData
           };
+          
+          // ✅ CRITICAL: Override any Lambert 72 coordinates with our WGS84 coordinates
+          console.log('🔧 ========== FORCING WGS84 COORDINATES ==========');
+          console.log('🔧 Before override:', enhancedPointData);
+          
+          // Force the coordinates to be WGS84 from graphic geometry
+          enhancedPointData.x = pointData.x; // WGS84 longitude
+          enhancedPointData.y = pointData.y; // WGS84 latitude
+          
+          console.log('🔧 After WGS84 override:', {
+            x: enhancedPointData.x,
+            y: enhancedPointData.y,
+            source: 'graphic.geometry WGS84'
+          });
+          console.log('🔧 ===============================================');
           
           // Trigger modal opening with enhanced point data including submarket
           if (window.openCadastreModal) {
@@ -252,7 +264,7 @@ export const useMapLayers = () => {
       }
     });
     
-    console.log('✅ Enhanced cadastre click handling set up with fixed submarket intersection');
+    console.log('✅ Enhanced cadastre click handling set up with WGS84 coordinates');
   }, [extractAttributesFromGraphic]);
 
   // ✅ FIXED: Set up click handling for submarket layer (modal only, no popup)
@@ -532,9 +544,7 @@ export const useMapLayers = () => {
         }
       });
 
-      // Force layer refresh
-      targetLayer.refresh();
-      
+      // ✅ FIXED: Don't call refresh on GraphicsLayer (it doesn't have this method)
       console.log(`🎉 Added ${addedCount}/${buildingData.length} buildings to map`);
 
     } catch (error) {
