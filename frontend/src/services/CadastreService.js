@@ -1,18 +1,20 @@
 // src/services/CadastreService.js - FIXED VERSION
 
 export class CadastreService {
-  // ✅ SIMPLIFIED: Use correct URL structure for FeatureServer endpoints (cadastre only)
+  // ✅ UPDATED: Use correct URL structure matching your backend
   static CADASTRE_BASE_URL = 'https://arcgiscenter.cbre.eu/arcgis/rest/services/Belgium/Cadastre/FeatureServer';
+  static SUBMARKET_BASE_URL = 'https://arcgiscenter.cbre.eu/arcgis/rest/services/Hosted/Submarkets_Arrondissements_Provinces/FeatureServer';
   
-  // ✅ UPDATED: Layer endpoints using FeatureServer for cadastre layers only
+  // ✅ COMPLETE: All layer endpoints including submarket
   static LAYERS = {
     PARCELS: `${this.CADASTRE_BASE_URL}/0`,      // Parcel data
     BUILDINGS: `${this.CADASTRE_BASE_URL}/1`,    // Building data  
-    POINTS: `${this.CADASTRE_BASE_URL}/2`        // Point data (what we click on)
+    POINTS: `${this.CADASTRE_BASE_URL}/2`,       // Point data (what we click on)
+    SUBMARKETS: `${this.SUBMARKET_BASE_URL}/0`   // Submarket data
   };
 
   /**
-   * Fetch comprehensive cadastre data when a point is clicked (simplified - no submarket)
+   * Fetch comprehensive cadastre data when a point is clicked (matches Efficy backend exactly)
    * @param {string} pointGuid - The GUID from the clicked cadastre point
    * @returns {Promise<Object>} - Combined cadastre data
    */
@@ -27,17 +29,18 @@ export class CadastreService {
         point: pointData,
         buildings: [],
         parcel: null,
+        submarket: null,
         errors: []
       };
 
       if (pointData) {
-        // Step 2: Get building data if building_guid exists
+        // Step 2: Get building data if building_guid exists (matches your backend)
         if (pointData.building_guid) {
           try {
             const buildingData = await this.queryBuildingData(pointData.building_guid);
             result.buildings = buildingData;
             
-            // Step 3: Get parcel data using building's parcel_guid
+            // Step 3: Get parcel data using building's parcel_guid (matches your backend)
             if (buildingData.length > 0 && buildingData[0].parcel_guid) {
               try {
                 const parcelData = await this.queryParcelData(buildingData[0].parcel_guid);
@@ -50,9 +53,20 @@ export class CadastreService {
             result.errors.push(`Building data: ${error.message}`);
           }
         }
+
+        // Step 4: Get submarket data using coordinates (exactly like your backend)
+        if (pointData.x && pointData.y) {
+          try {
+            const submarketData = await this.querySubmarketData(pointData.x, pointData.y);
+            result.submarket = submarketData;
+          } catch (error) {
+            result.errors.push(`Submarket data: ${error.message}`);
+            console.warn('⚠️ Submarket query failed but continuing:', error.message);
+          }
+        }
       }
 
-      console.log('📊 Cadastre data fetched:', result);
+      console.log('📊 Cadastre data fetched (matches backend):', result);
       return result;
 
     } catch (error) {
@@ -184,6 +198,161 @@ export class CadastreService {
   }
 
   /**
+   * ✅ BACKEND MATCH: Query submarket data using coordinates (exactly like your Efficy backend)
+   */
+  static async querySubmarketData(longitude, latitude) {
+    console.log('🗺️ Querying submarket data for coordinates:', { longitude, latitude });
+    
+    // Build query exactly like your backend QueryBuilder
+    const query = {
+      outFields: '*',
+      returnGeometry: 'false',
+      geometry: `${longitude},${latitude}`,
+      geometryType: 'esriGeometryPoint',
+      inSR: '4326',
+      spatialRel: 'esriSpatialRelIntersects',
+      resultRecordCount: '10',
+      f: 'geojson'  // Your backend uses geojson
+    };
+
+    const url = `${this.LAYERS.SUBMARKETS}/query?${new URLSearchParams(query)}`;
+    console.log('🗺️ Submarket query URL (backend pattern):', url);
+
+    try {
+      const response = await fetch(url);
+      const data = await response.json();
+      
+      console.log('🗺️ Submarket query response:', data);
+      
+      if (data.error) {
+        console.error('❌ Submarket query error:', data.error);
+        throw new Error(`Submarket query error: ${data.error.message || data.error}`);
+      }
+      
+      if (data.features && data.features.length > 0) {
+        // Extract properties from GeoJSON response (like your backend)
+        const submarketData = data.features[0].properties;
+        console.log('✅ Submarket data extracted (backend pattern):', submarketData);
+        console.log('📊 Submarket fields available:', Object.keys(submarketData));
+        return submarketData;
+      } else {
+        console.warn('⚠️ No submarket features found for coordinates:', { longitude, latitude });
+        
+        // Try with a small buffer (fallback)
+        return await this.querySubmarketDataWithBuffer(longitude, latitude);
+      }
+      
+    } catch (error) {
+      console.error('❌ Error querying submarket data:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * ✅ FALLBACK: Query submarket with small buffer if point intersection fails
+   */
+  static async querySubmarketDataWithBuffer(longitude, latitude, bufferDegrees = 0.001) {
+    console.log('🔍 Trying submarket query with buffer:', bufferDegrees, 'degrees');
+    
+    // Create a simple buffer around the point
+    const bufferGeometry = {
+      rings: [[
+        [longitude - bufferDegrees, latitude - bufferDegrees],
+        [longitude + bufferDegrees, latitude - bufferDegrees],
+        [longitude + bufferDegrees, latitude + bufferDegrees],
+        [longitude - bufferDegrees, latitude + bufferDegrees],
+        [longitude - bufferDegrees, latitude - bufferDegrees]
+      ]],
+      spatialReference: { wkid: 4326 }
+    };
+
+    const query = {
+      outFields: '*',
+      returnGeometry: 'false',
+      geometry: JSON.stringify(bufferGeometry),
+      geometryType: 'esriGeometryPolygon',
+      inSR: '4326',
+      spatialRel: 'esriSpatialRelIntersects',
+      resultRecordCount: '1',
+      f: 'geojson'
+    };
+
+    const url = `${this.LAYERS.SUBMARKETS}/query`;
+    console.log('🗺️ Buffer submarket query URL:', url);
+    
+    try {
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: new URLSearchParams(query)
+      });
+      
+      const data = await response.json();
+      console.log('🗺️ Buffer submarket query response:', data);
+      
+      if (data.error) {
+        throw new Error(`Buffer submarket query error: ${data.error.message || data.error}`);
+      }
+      
+      if (data.features && data.features.length > 0) {
+        const submarketData = data.features[0].properties;
+        console.log('✅ Buffer submarket data found:', submarketData);
+        return submarketData;
+      }
+      
+      console.warn('⚠️ No submarket found even with buffer');
+      return null;
+    } catch (error) {
+      console.error('❌ Buffer submarket query failed:', error);
+      return null;
+    }
+  }
+
+  /**
+   * Get the best available address from point data (using actual cadastre field names)
+   */
+  static formatAddress(pointData) {
+    if (!pointData) return 'N/A';
+    
+    console.log('🏠 Formatting address from point data:', pointData);
+    
+    let address = '';
+    
+    // Street - prioritize NL, then FR, then DE
+    const street = pointData.street_nl || pointData.street_fr || pointData.street_de;
+    if (street && pointData.number) {
+      address = `${street} ${pointData.number}`;
+    } else if (street) {
+      address = street;
+    }
+    
+    // City and postcode - prioritize NL, then FR, then DE
+    const city = pointData.town_nl || pointData.town_fr || pointData.town_de;
+    if (city) {
+      if (address) {
+        address += `, `;
+      }
+      if (pointData.postcode) {
+        address += `${pointData.postcode} ${city}`;
+      } else {
+        address += city;
+      }
+    }
+    
+    // Country
+    if (pointData.country && pointData.country !== 'Belgium' && pointData.country !== 'BEL') {
+      address += `, ${pointData.country}`;
+    }
+    
+    const formattedAddress = address || 'Address not available';
+    console.log('📍 Formatted address:', formattedAddress);
+    
+    return formattedAddress;
+  }
+
+  /**
    * Format area in square meters to a readable format
    */
   static formatArea(areaM2) {
@@ -239,7 +408,7 @@ export class CadastreService {
   }
 
   /**
-   * ✅ SIMPLIFIED: Test connection to cadastre services
+   * ✅ COMPLETE: Test connection to all cadastre services including submarket
    */
   static async testConnection() {
     console.log('🔍 Testing cadastre service connections...');
@@ -247,7 +416,8 @@ export class CadastreService {
     const tests = [
       { name: 'Points Layer', url: `${this.LAYERS.POINTS}/query?where=1=1&returnCountOnly=true&f=json` },
       { name: 'Buildings Layer', url: `${this.LAYERS.BUILDINGS}/query?where=1=1&returnCountOnly=true&f=json` },
-      { name: 'Parcels Layer', url: `${this.LAYERS.PARCELS}/query?where=1=1&returnCountOnly=true&f=json` }
+      { name: 'Parcels Layer', url: `${this.LAYERS.PARCELS}/query?where=1=1&returnCountOnly=true&f=json` },
+      { name: 'Submarkets Layer', url: `${this.LAYERS.SUBMARKETS}/query?where=1=1&returnCountOnly=true&f=json` }
     ];
 
     const results = [];
