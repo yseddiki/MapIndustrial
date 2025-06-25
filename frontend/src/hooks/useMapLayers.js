@@ -1,4 +1,4 @@
-// src/hooks/useMapLayers.js - FIXED TO USE GRAPHIC GEOMETRY COORDINATES
+// src/hooks/useMapLayers.js - ENHANCED COORDINATE EXTRACTION FROM GRAPHIC
 
 import { useState, useCallback } from 'react';
 import { CONFIG } from '../config/config';
@@ -76,7 +76,7 @@ export const useMapLayers = () => {
     return layerInfo;
   }, []);
 
-  // ✅ FIXED: Extract attributes and FORCE use of graphic geometry coordinates
+  // ✅ ENHANCED: Extract attributes and coordinates from multiple sources
   const extractAttributesFromGraphic = useCallback((graphic, layerFields) => {
     console.log('📊 ============ EXTRACTING ATTRIBUTES ============');
     console.log('📊 Input graphic object:', graphic);
@@ -87,6 +87,9 @@ export const useMapLayers = () => {
     
     console.log('📍 Raw graphic attributes object:', rawAttributes);
     console.log('🗺️ Graphic geometry object:', geometry);
+    console.log('🎯 Graphic direct properties check:');
+    console.log('   - graphic.longitude:', graphic.longitude);
+    console.log('   - graphic.latitude:', graphic.latitude);
     
     // Extract all available attributes dynamically
     const extractedData = {};
@@ -109,35 +112,65 @@ export const useMapLayers = () => {
       });
     }
     
-    // ✅ CRITICAL FIX: FORCE use of graphic geometry coordinates (WGS84)
-    if (geometry) {
-      console.log('📐 Processing geometry coordinates...');
+    // ✅ ENHANCED: Extract coordinates from multiple sources (priority order)
+    let longitude = null;
+    let latitude = null;
+    let coordinateSource = 'unknown';
+    
+    // Priority 1: Direct graphic properties (as shown in your log)
+    if (graphic.longitude !== undefined && graphic.latitude !== undefined) {
+      longitude = graphic.longitude;
+      latitude = graphic.latitude;
+      coordinateSource = 'graphic.longitude/latitude';
+      console.log('✅ Found coordinates directly on graphic object');
+    }
+    // Priority 2: Geometry properties
+    else if (geometry && geometry.longitude !== undefined && geometry.latitude !== undefined) {
+      longitude = geometry.longitude;
+      latitude = geometry.latitude;
+      coordinateSource = 'geometry.longitude/latitude';
+      console.log('✅ Found coordinates in geometry object');
+    }
+    // Priority 3: Geometry x/y (might be in different coordinate system)
+    else if (geometry && geometry.x !== undefined && geometry.y !== undefined) {
+      longitude = geometry.x;
+      latitude = geometry.y;
+      coordinateSource = 'geometry.x/y';
+      console.log('⚠️ Using geometry.x/y as fallback coordinates');
+    }
+    
+    if (longitude !== null && latitude !== null) {
+      // ✅ FORCE: Set the coordinates in the standard format
+      extractedData.x = longitude;
+      extractedData.y = latitude;
       
-      // ✅ FORCE: Use geometry.longitude and geometry.latitude (these are WGS84)
-      if (geometry.longitude !== undefined && geometry.latitude !== undefined) {
-        extractedData.x = geometry.longitude;  // WGS84 longitude
-        extractedData.y = geometry.latitude;   // WGS84 latitude
-        
-        console.log(`✅ FORCED WGS84 coordinates from geometry:`, {
-          longitude: geometry.longitude,
-          latitude: geometry.latitude,
-          x: extractedData.x,
-          y: extractedData.y
-        });
-        
-        // ✅ VALIDATION: Ensure these are Belgium WGS84 coordinates
-        if (geometry.longitude >= 2.5 && geometry.longitude <= 6.4 && 
-            geometry.latitude >= 49.5 && geometry.latitude <= 51.6) {
-          console.log('✅ Coordinates validated as Belgium WGS84');
-        } else {
-          console.warn('⚠️ Coordinates outside Belgium bounds but proceeding');
-        }
-        
+      console.log(`✅ COORDINATES EXTRACTED:`, {
+        longitude: longitude,
+        latitude: latitude,
+        x: extractedData.x,
+        y: extractedData.y,
+        source: coordinateSource
+      });
+      
+      // ✅ VALIDATION: Check if coordinates are reasonable for Belgium
+      if (longitude >= 2.5 && longitude <= 6.4 && latitude >= 49.5 && latitude <= 51.6) {
+        console.log('✅ Coordinates validated as Belgium WGS84');
       } else {
-        console.warn('⚠️ No longitude/latitude in geometry, cannot extract coordinates');
+        console.warn('⚠️ Coordinates outside typical Belgium bounds but proceeding:', {
+          longitude,
+          latitude,
+          expectedLon: '2.5-6.4',
+          expectedLat: '49.5-51.6'
+        });
       }
     } else {
-      console.log('⚠️ No geometry found on graphic');
+      console.error('❌ CRITICAL: No coordinates found in any source!');
+      console.error('   - graphic.longitude:', graphic.longitude);
+      console.error('   - graphic.latitude:', graphic.latitude);
+      console.error('   - geometry?.longitude:', geometry?.longitude);
+      console.error('   - geometry?.latitude:', geometry?.latitude);
+      console.error('   - geometry?.x:', geometry?.x);
+      console.error('   - geometry?.y:', geometry?.y);
     }
     
     console.log('✅ ============ FINAL EXTRACTED DATA ============');
@@ -145,16 +178,16 @@ export const useMapLayers = () => {
     console.log('✅ Coordinates that will be used:', {
       x: extractedData.x,
       y: extractedData.y,
-      source: 'graphic.geometry.longitude/latitude'
+      source: coordinateSource
     });
     console.log('✅ ================================================');
     
     return extractedData;
   }, []);
 
-  // ✅ FIXED: Set up click handling for cadastre points with graphic geometry coordinates
+  // ✅ ENHANCED: Set up click handling for cadastre points with robust coordinate extraction
   const setupCadastreClickHandling = useCallback((view, cadastreLayer, submarketLayerRef = null) => {
-    console.log('🎯 Setting up enhanced cadastre click handling with graphic geometry coordinates');
+    console.log('🎯 Setting up enhanced cadastre click handling with robust coordinate extraction');
     
     view.on('click', async (event) => {
       try {
@@ -169,40 +202,43 @@ export const useMapLayers = () => {
         if (cadastreResults.length > 0) {
           const clickedGraphic = cadastreResults[0].graphic;
           
-          console.log('🎯 ✅ CADASTRE DOT CLICKED! Using graphic geometry coordinates...');
+          console.log('🎯 ✅ CADASTRE DOT CLICKED! Extracting data with enhanced coordinate handling...');
+          console.log('🗺️ Raw clicked graphic:', clickedGraphic);
           
-          // ✅ CRITICAL: Extract point data using graphic geometry coordinates
+          // ✅ ENHANCED: Extract point data with robust coordinate extraction
           const pointData = extractAttributesFromGraphic(clickedGraphic, cadastreLayer.fields);
           
-          console.log('📍 Point data with WGS84 coordinates:', pointData);
+          console.log('📍 Point data with extracted coordinates:', pointData);
           
-          // ✅ VALIDATION: Ensure we have WGS84 coordinates
+          // ✅ VALIDATION: Ensure we have coordinates
           if (pointData.x && pointData.y) {
-            console.log('✅ WGS84 coordinates extracted successfully:', {
+            console.log('✅ Coordinates extracted successfully:', {
               longitude: pointData.x,
               latitude: pointData.y
             });
           } else {
-            console.error('❌ Failed to extract coordinates from graphic geometry');
+            console.error('❌ Failed to extract coordinates from graphic');
+            console.error('❌ Point data received:', pointData);
+            console.error('❌ Original graphic:', clickedGraphic);
             return;
           }
           
-          // ✅ FIXED: Perform submarket intersection using the click coordinates directly
+          // ✅ ENHANCED: Perform submarket intersection using the click coordinates
           let submarketData = null;
           if (submarketLayerRef) {
             try {
               console.log('🗺️ Performing submarket intersection for click coordinates:', event.mapPoint);
               
-              // ✅ FIXED: Use the actual click coordinates from the event
+              // ✅ Use the actual click coordinates from the event
               const clickPoint = event.mapPoint;
               
               // Create query for submarket layer using the click point
               const submarketQuery = submarketLayerRef.createQuery();
-              submarketQuery.geometry = clickPoint; // Use the click point directly
+              submarketQuery.geometry = clickPoint;
               submarketQuery.spatialRelationship = 'intersects';
               submarketQuery.returnGeometry = false;
               submarketQuery.outFields = ['*'];
-              submarketQuery.maxRecordCount = 1; // We only need one result
+              submarketQuery.maxRecordCount = 1;
               
               console.log('🗺️ Submarket query details:', {
                 geometry: clickPoint,
@@ -234,23 +270,18 @@ export const useMapLayers = () => {
             submarketData: submarketData
           };
           
-          // ✅ CRITICAL: Override any Lambert 72 coordinates with our WGS84 coordinates
-          console.log('🔧 ========== FORCING WGS84 COORDINATES ==========');
-          console.log('🔧 Before override:', enhancedPointData);
-          
-          // Force the coordinates to be WGS84 from graphic geometry
-          enhancedPointData.x = pointData.x; // WGS84 longitude
-          enhancedPointData.y = pointData.y; // WGS84 latitude
-          
-          console.log('🔧 After WGS84 override:', {
+          console.log('🎯 ========== FINAL ENHANCED POINT DATA ==========');
+          console.log('🎯 Complete point data with coordinates and submarket:', enhancedPointData);
+          console.log('📍 Final coordinates to be used:', {
             x: enhancedPointData.x,
             y: enhancedPointData.y,
-            source: 'graphic.geometry WGS84'
+            hasSubmarket: !!submarketData
           });
-          console.log('🔧 ===============================================');
+          console.log('🎯 ===============================================');
           
-          // Trigger modal opening with enhanced point data including submarket
+          // Trigger modal opening with enhanced point data
           if (window.openCadastreModal) {
+            console.log('🚀 Opening cadastre modal with enhanced data...');
             window.openCadastreModal(enhancedPointData);
           } else {
             console.warn('⚠️ Modal handler not available yet');
@@ -264,10 +295,10 @@ export const useMapLayers = () => {
       }
     });
     
-    console.log('✅ Enhanced cadastre click handling set up with WGS84 coordinates');
+    console.log('✅ Enhanced cadastre click handling set up with robust coordinate extraction');
   }, [extractAttributesFromGraphic]);
 
-  // ✅ FIXED: Set up click handling for submarket layer (modal only, no popup)
+  // ✅ ENHANCED: Set up click handling for submarket layer
   const setupSubmarketClickHandling = useCallback((view, submarketLayerRef) => {
     console.log('🗺️ Setting up submarket click handling for modal');
     
@@ -309,14 +340,13 @@ export const useMapLayers = () => {
     console.log('✅ Submarket click handling set up for modal only');
   }, [extractAttributesFromGraphic]);
 
-  // ✅ FIXED: Use FeatureLayer without popup (modal only)
+  // ✅ Create cadastre layer with enhanced configuration
   const createCadastreLayer = useCallback(async () => {
     // Ensure ArcGIS API is loaded
     if (!window.require) {
       throw new Error('ArcGIS API not loaded yet');
     }
 
-    // ✅ FIXED: Use FeatureLayer instead of MapImageLayer
     const { FeatureLayer } = await new Promise((resolve, reject) => {
       window.require([
         'esri/layers/FeatureLayer'
@@ -325,18 +355,17 @@ export const useMapLayers = () => {
       }, reject);
     });
 
-    // ✅ FIXED: Create the CBRE Belgium Cadastre layer as FeatureLayer using the full URL with layer ID
+    // Create the CBRE Belgium Cadastre layer as FeatureLayer
     const layer = new FeatureLayer({
-      url: CONFIG.ARCGIS.CADASTRE_LAYER_URL, // Keep the /2 for the specific layer
+      url: CONFIG.ARCGIS.CADASTRE_LAYER_URL,
       title: 'Belgium Cadastre',
       opacity: 1,
       visible: false, // Start hidden for performance
-      // ✅ FIXED: Direct renderer for FeatureLayer
       renderer: {
         type: "simple",
         symbol: {
           type: "simple-marker",
-          size: 7, // 7px white dots as requested
+          size: 7,
           color: [255, 255, 255], // White fill
           outline: {
             width: 1,
@@ -344,15 +373,12 @@ export const useMapLayers = () => {
           }
         }
       },
-      // ✅ REMOVED: No popup template - modal only
-      popupTemplate: null,
-      // ✅ FIXED: Set outFields to get all fields
+      popupTemplate: null, // Modal only
       outFields: ["*"],
-      // ✅ FIXED: Enable feature querying
-      definitionExpression: "1=1" // Show all features
+      definitionExpression: "1=1"
     });
 
-    console.log('🏛️ Cadastre FeatureLayer created (modal only, no popup):', {
+    console.log('🏛️ Cadastre FeatureLayer created (enhanced coordinate extraction):', {
       url: layer.url,
       title: layer.title,
       visible: layer.visible,
@@ -364,12 +390,12 @@ export const useMapLayers = () => {
       popupEnabled: false
     });
 
-    // ✅ FIXED: Wait for layer to load and log field information
+    // Wait for layer to load and log field information
     layer.when(() => {
-      console.log('✅ Cadastre layer loaded successfully (modal only)');
+      console.log('✅ Cadastre layer loaded successfully (enhanced coordinate extraction)');
       console.log('📋 Available fields:', layer.fields.map(f => f.name));
       console.log('🔗 Layer capabilities:', layer.capabilities);
-      console.log('🎯 Layer ready for click handling (modal only)');
+      console.log('🎯 Layer ready for enhanced click handling');
     }).catch(error => {
       console.error('❌ Failed to load cadastre layer:', error);
     });
@@ -378,9 +404,8 @@ export const useMapLayers = () => {
     return layer;
   }, []);
 
-  // ✅ FIXED: Create submarket layer without popup (modal only)
+  // Create submarket layer
   const createSubmarketLayer = useCallback(async () => {
-    // Ensure ArcGIS API is loaded
     if (!window.require) {
       throw new Error('ArcGIS API not loaded yet');
     }
@@ -393,30 +418,28 @@ export const useMapLayers = () => {
       }, reject);
     });
 
-    // Create the submarket layer
     const layer = new FeatureLayer({
       url: CadastreService.LAYERS.SUBMARKETS,
       title: 'Submarkets',
-      opacity: 0.3, // Semi-transparent so buildings show through
-      visible: false, // Start hidden
+      opacity: 0.3,
+      visible: false,
       renderer: {
         type: "simple",
         symbol: {
           type: "simple-fill",
-          color: [0, 122, 194, 0.2], // Light blue with transparency
+          color: [0, 122, 194, 0.2],
           outline: {
-            color: [0, 122, 194, 0.8], // Darker blue outline
+            color: [0, 122, 194, 0.8],
             width: 2
           }
         }
       },
-      // ✅ REMOVED: No popup template - modal only
       popupTemplate: null,
       outFields: ["*"],
       definitionExpression: "1=1"
     });
 
-    console.log('🗺️ Submarket FeatureLayer created (modal only, no popup):', {
+    console.log('🗺️ Submarket FeatureLayer created:', {
       url: layer.url,
       title: layer.title,
       visible: layer.visible,
@@ -425,11 +448,10 @@ export const useMapLayers = () => {
       popupEnabled: false
     });
 
-    // Wait for layer to load and log field information
     layer.when(() => {
-      console.log('✅ Submarket layer loaded successfully (modal only)');
+      console.log('✅ Submarket layer loaded successfully');
       console.log('📋 Available submarket fields:', layer.fields.map(f => f.name));
-      console.log('🎯 Submarket layer ready for click handling (modal only)');
+      console.log('🎯 Submarket layer ready for click handling');
     }).catch(error => {
       console.error('❌ Failed to load submarket layer:', error);
     });
@@ -439,7 +461,6 @@ export const useMapLayers = () => {
   }, []);
 
   const createBuildingsLayer = useCallback(async () => {
-    // Ensure ArcGIS API is loaded
     if (!window.require) {
       throw new Error('ArcGIS API not loaded yet');
     }
@@ -452,7 +473,6 @@ export const useMapLayers = () => {
       }, reject);
     });
 
-    // Create buildings layer
     const layer = new GraphicsLayer({
       title: 'Buildings',
       visible: true,
@@ -469,7 +489,6 @@ export const useMapLayers = () => {
       return;
     }
 
-    // Ensure ArcGIS API is loaded
     if (!window.require) {
       console.error('❌ CRITICAL: ArcGIS API not loaded yet');
       return;
@@ -505,7 +524,7 @@ export const useMapLayers = () => {
             spatialReference: { wkid: 4326 }
           });
 
-          // Create smaller, color-coded symbol
+          // Create color-coded symbol
           const symbol = new SimpleMarkerSymbol({
             color: markerColor,
             outline: {
@@ -515,15 +534,14 @@ export const useMapLayers = () => {
             size: '10px'
           });
 
-          // ✅ V2 UPDATE: Simplified popup template
+          // Create popup template
           const popupTemplate = new PopupTemplate({
             title: `${building.name}`,
             content: createPopupContent(building, qualityInfo),
-            // Remove all actions except close for simplicity
             actions: []
           });
 
-          // Create graphic with quality info in attributes
+          // Create graphic
           const graphic = new Graphic({
             geometry: point,
             symbol: symbol,
@@ -544,7 +562,6 @@ export const useMapLayers = () => {
         }
       });
 
-      // ✅ FIXED: Don't call refresh on GraphicsLayer (it doesn't have this method)
       console.log(`🎉 Added ${addedCount}/${buildingData.length} buildings to map`);
 
     } catch (error) {
@@ -557,13 +574,12 @@ export const useMapLayers = () => {
       console.log(`🟫 Cadastre layer visibility changing to: ${visible}`);
       
       if (visible) {
-        console.log('📊 Loading cadastre FeatureLayer with white dots - this may take a moment...');
-        console.log('🎯 When visible, click on any white dot to see complete data!');
+        console.log('📊 Loading cadastre FeatureLayer with enhanced coordinate extraction - this may take a moment...');
+        console.log('🎯 When visible, click on any white dot to see complete data with precise coordinates!');
         
-        // Add event listener to log when layer loads
         const handleLayerLoad = () => {
           setTimeout(() => {
-            console.log('📍 Cadastre FeatureLayer is now visible and clickable');
+            console.log('📍 Cadastre FeatureLayer is now visible and clickable with enhanced coordinate extraction');
             console.log('🔍 Layer details:', {
               url: cadastreLayer.url,
               title: cadastreLayer.title,
@@ -573,7 +589,8 @@ export const useMapLayers = () => {
               fieldsCount: cadastreLayer.fields?.length || 0,
               symbolColor: 'white with black outline',
               symbolSize: '7px',
-              canQuery: true
+              canQuery: true,
+              coordinateExtraction: 'enhanced multi-source'
             });
             
             if (cadastreLayer.fields) {
@@ -582,7 +599,6 @@ export const useMapLayers = () => {
           }, 1000);
         };
 
-        // Set up one-time event listener for when layer becomes visible
         if (!cadastreLayer.visible) {
           cadastreLayer.watch('visible', (newVisible) => {
             if (newVisible) {
@@ -602,7 +618,6 @@ export const useMapLayers = () => {
     }
   }, [cadastreLayer]);
 
-  // ✅ NEW: Update submarket layer visibility
   const updateSubmarketVisibility = useCallback((visible) => {
     if (submarketLayer) {
       console.log(`🗺️ Submarket layer visibility changing to: ${visible}`);

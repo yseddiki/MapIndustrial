@@ -1,4 +1,4 @@
-// src/components/CadastreModal.js - WITHOUT ASSET CLASS SELECTION UI
+// src/components/CadastreModal.js - WITHOUT ASSET CLASS SELECTION UI - FIXED COORDINATES
 
 import React, { useState, useEffect } from 'react';
 import { CadastreService } from '../services/CadastreService';
@@ -121,7 +121,14 @@ const CadastreModal = ({ isOpen, onClose, cadastrePoint, preSelectedAssetClass, 
       // Include submarket data from intersection if available
       const completeData = {
         ...data,
-        point: { ...cadastrePoint, ...data.point },
+        point: { 
+          ...data.point, 
+          // ✅ FORCE: Always use coordinates from clicked graphic (don't let API overwrite them)
+          x: cadastrePoint.x, 
+          y: cadastrePoint.y,
+          longitude: cadastrePoint.x,
+          latitude: cadastrePoint.y
+        },
         submarket: cadastrePoint.submarketData || data.submarket
       };
       
@@ -446,10 +453,19 @@ const CadastreModal = ({ isOpen, onClose, cadastrePoint, preSelectedAssetClass, 
                       </span>
                     </div>
                     <div className="data-row">
-                      <strong>Coordinates:</strong>
+                      <strong>Longitude:</strong>
                       <span>
-                        {cadastreData.point.x && cadastreData.point.y 
-                          ? `${cadastreData.point.x.toFixed(6)}, ${cadastreData.point.y.toFixed(6)}`
+                        {cadastrePoint.x 
+                          ? cadastrePoint.x.toFixed(6)
+                          : 'N/A'
+                        }
+                      </span>
+                    </div>
+                    <div className="data-row">
+                      <strong>Latitude:</strong>
+                      <span>
+                        {cadastrePoint.y 
+                          ? cadastrePoint.y.toFixed(6)
                           : 'N/A'
                         }
                       </span>

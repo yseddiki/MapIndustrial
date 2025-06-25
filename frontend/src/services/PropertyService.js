@@ -1,4 +1,4 @@
-// src/services/PropertyService.js - FIXED TO USE CORRECT CADASTRE COORDINATES
+// src/services/PropertyService.js - FIXED COORDINATES DISPLAY
 
 import { CONFIG } from '../config/config';
 
@@ -180,7 +180,7 @@ export class PropertyService {
 
     // ✅ ESSENTIAL FIELDS ONLY - No risky numeric fields
     if (point) {
-      console.log('📍 Processing point data with correct coordinates');
+      console.log('📍 Processing point data with coordinates from clicked graphic');
       
       // ✅ COMPLETE: All address fields (strings)
       this.safeAddField(propertyData, 'F_ARCGIS_ADDRESS', point.guid, 'string');
@@ -201,38 +201,40 @@ export class PropertyService {
         console.log(`✅ Added country field 'F_COUNTRY': ${countryId} (from '${point.country}')`);
       }
       
-      // ✅ CRITICAL FIX: ONLY use point.x and point.y - ignore all other coordinate sources
+      // ✅ CRITICAL FIX: Use coordinates from the clicked graphic (point.x/y are from graphic geometry)
       console.log('📍 ========== COORDINATE PROCESSING ==========');
       console.log('🔍 Raw point data:', point);
-      console.log('🎯 ONLY using point.x and point.y coordinates:', {
+      console.log('🎯 Using coordinates from clicked graphic (point.x/y):', {
         'point.x': point.x,
         'point.y': point.y,
+        'point.longitude': point.longitude,
+        'point.latitude': point.latitude,
         'type_x': typeof point.x,
         'type_y': typeof point.y
       });
       
-      // ✅ FORCE: Only use point.x/point.y - these are already WGS84
+      // ✅ FORCE: Use point.x/point.y (these are from the clicked graphic geometry)
       if (point.x !== undefined && point.y !== undefined && 
           !isNaN(point.x) && !isNaN(point.y)) {
         
-        // ✅ CRITICAL: point.x = longitude, point.y = latitude (WGS84)
-        const longitude = parseFloat(point.x);  // 4.991011619539775
-        const latitude = parseFloat(point.y);   // 50.581962689078644
+        // ✅ CRITICAL: point.x = longitude, point.y = latitude (from clicked graphic)
+        const longitude = parseFloat(point.x);
+        const latitude = parseFloat(point.y);
         
-        // ✅ FORCE: Set coordinates directly - no conversions, no other sources
+        // ✅ FORCE: Set coordinates directly from clicked graphic
         propertyData.LONGITUDE = longitude;
         propertyData.LATITUDE = latitude;
         
-        console.log('✅ FORCED coordinates from point.x/point.y ONLY:');
-        console.log(`   📌 LONGITUDE: ${longitude} (from point.x)`);
-        console.log(`   📌 LATITUDE: ${latitude} (from point.y)`);
-        console.log('   🚫 IGNORING any geometry or other coordinate sources');
+        console.log('✅ SENDING TO API - coordinates from clicked graphic:');
+        console.log(`   📤 LONGITUDE field: ${longitude} (from clicked graphic point.x)`);
+        console.log(`   📤 LATITUDE field: ${latitude} (from clicked graphic point.y)`);
+        console.log('   🎯 These coordinates will be sent to Efficy API in LONGITUDE & LATITUDE fields');
         
-        // ✅ VALIDATION: Verify these are reasonable WGS84 coordinates for Belgium
+        // ✅ VALIDATION: Verify these are reasonable coordinates for Belgium
         if (longitude >= 2.5 && longitude <= 6.4 && latitude >= 49.5 && latitude <= 51.6) {
-          console.log('✅ Coordinates validated as WGS84 Belgium coordinates');
+          console.log('✅ Coordinates validated as Belgium coordinates for API');
         } else {
-          console.error('❌ COORDINATE ERROR: Values outside Belgium WGS84 range!', {
+          console.error('❌ COORDINATE ERROR: Values outside Belgium range!', {
             longitude,
             latitude,
             expected: 'longitude 2.5-6.4, latitude 49.5-51.6'
@@ -240,7 +242,7 @@ export class PropertyService {
         }
         
       } else {
-        console.error('❌ CRITICAL ERROR: point.x or point.y missing or invalid:', {
+        console.error('❌ CRITICAL ERROR: point.x or point.y missing or invalid for API:', {
           'point.x': point.x,
           'point.y': point.y,
           'x_undefined': point.x === undefined,
@@ -392,9 +394,8 @@ export class PropertyService {
       point.town_de && memo.push(`City (DE): ${point.town_de}`);
       point.country && memo.push(`Country: ${point.country}`);
       
-      // ✅ FIXED: Correct coordinate information
+      // ✅ FIXED: Correct coordinate information - removed WGS84 reference
       if (point.x && point.y) {
-        memo.push(`Coordinates (WGS84): ${point.x}, ${point.y}`);
         memo.push(`Longitude: ${point.x}`);
         memo.push(`Latitude: ${point.y}`);
       }
