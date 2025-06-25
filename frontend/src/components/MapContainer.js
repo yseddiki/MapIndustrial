@@ -1,4 +1,4 @@
-// src/components/MapContainer.js
+// src/components/MapContainer.js - UPDATED WITH SUBMARKET LAYER SUPPORT
 
 import React, { useRef, useEffect, useState } from 'react';
 import { useArcGISAPI } from '../hooks/useArcGISAPI';
@@ -11,6 +11,7 @@ import LoadingOverlay from './LoadingOverlay';
 import ProcessingOverlay from './ProcessingOverlay';
 import LayerControl from './LayerControl';
 import CadastreModal from './CadastreModal';
+import SubmarketModal from './SubmarketModal';
 
 const MapContainer = ({ selectedAsset }) => {
   const mapContainerRef = useRef(null);
@@ -18,6 +19,11 @@ const MapContainer = ({ selectedAsset }) => {
   // Modal state
   const [isCadastreModalOpen, setIsCadastreModalOpen] = useState(false);
   const [selectedCadastrePoint, setSelectedCadastrePoint] = useState(null);
+  
+  // ✅ NEW: Submarket modal state
+  const [isSubmarketModalOpen, setIsSubmarketModalOpen] = useState(false);
+  const [selectedSubmarketData, setSelectedSubmarketData] = useState(null);
+  const [submarketVisible, setSubmarketVisible] = useState(false);
   
   // Custom hooks
   const {
@@ -42,11 +48,15 @@ const MapContainer = ({ selectedAsset }) => {
   const {
     cadastreLayer,
     buildingsLayer,
+    submarketLayer,
     createCadastreLayer,
     createBuildingsLayer,
+    createSubmarketLayer,
     addBuildingsToMap,
     updateCadastreVisibility,
-    setupCadastreClickHandling
+    updateSubmarketVisibility,
+    setupCadastreClickHandling,
+    setupSubmarketClickHandling
   } = useMapLayers();
 
   const {
@@ -72,7 +82,7 @@ const MapContainer = ({ selectedAsset }) => {
     applyFilters
   } = useFilters();
 
-  // Set up global modal handler
+  // Set up global modal handlers
   useEffect(() => {
     window.openCadastreModal = (pointData) => {
       console.log('🎯 Opening cadastre modal with point data:', pointData);
@@ -80,15 +90,36 @@ const MapContainer = ({ selectedAsset }) => {
       setIsCadastreModalOpen(true);
     };
 
+    // ✅ NEW: Set up global submarket modal handler
+    window.openSubmarketModal = (submarketData) => {
+      console.log('🗺️ Opening submarket modal with data:', submarketData);
+      setSelectedSubmarketData(submarketData);
+      setIsSubmarketModalOpen(true);
+    };
+
     return () => {
       window.openCadastreModal = null;
+      window.openSubmarketModal = null;
     };
   }, []);
 
-  // Handle modal close
-  const handleModalClose = () => {
+  // Handle modal close functions
+  const handleCadastreModalClose = () => {
     setIsCadastreModalOpen(false);
     setSelectedCadastrePoint(null);
+  };
+
+  // ✅ NEW: Handle submarket modal close
+  const handleSubmarketModalClose = () => {
+    setIsSubmarketModalOpen(false);
+    setSelectedSubmarketData(null);
+  };
+
+  // ✅ NEW: Handle submarket visibility toggle
+  const handleSubmarketVisibilityToggle = () => {
+    const newVisibility = !submarketVisible;
+    setSubmarketVisible(newVisibility);
+    updateSubmarketVisibility(newVisibility);
   };
 
   // Initialize map and layers
@@ -102,30 +133,40 @@ const MapContainer = ({ selectedAsset }) => {
         
         setProcessing(true, 'Initializing map...');
         
-        // Now create layers after ArcGIS API is confirmed loaded
+        // ✅ UPDATED: Create layers including submarket layer
         setProcessing(true, 'Creating map layers...');
         const cadastre = await createCadastreLayer();
         const buildingsLayerInstance = await createBuildingsLayer();
+        const submarketLayerInstance = await createSubmarketLayer();
         
         console.log('✅ Layers created:', {
           cadastre: cadastre,
-          buildings: buildingsLayerInstance
+          buildings: buildingsLayerInstance,
+          submarket: submarketLayerInstance
         });
         
-        // Initialize map with layers
-        const { map, view } = await initializeMap(cadastre, buildingsLayerInstance);
+        // ✅ UPDATED: Initialize map with all layers - ORDER MATTERS: submarket on bottom, buildings on top
+        const { map, view } = await initializeMap(submarketLayerInstance, cadastre, buildingsLayerInstance);
         
-        console.log('✅ Map initialized:', {
+        console.log('✅ Map initialized with all layers:', {
           map: map,
           view: view
         });
         
-        // Set up cadastre click handling after map is ready
+        // Set up click handling for both cadastre and submarket layers after map is ready
         if (cadastre && view) {
           console.log('🎯 Setting up cadastre click handling for modal...');
-          setupCadastreClickHandling(view, cadastre);
+          setupCadastreClickHandling(view, cadastre, submarketLayerInstance);
         } else {
           console.warn('❌ Cannot set up cadastre click handling - missing cadastre layer or view');
+        }
+
+        // ✅ NEW: Set up submarket click handling
+        if (submarketLayerInstance && view) {
+          console.log('🗺️ Setting up submarket click handling for modal...');
+          setupSubmarketClickHandling(view, submarketLayerInstance);
+        } else {
+          console.warn('❌ Cannot set up submarket click handling - missing submarket layer or view');
         }
         
         // Load building data after map is ready
@@ -219,6 +260,9 @@ const MapContainer = ({ selectedAsset }) => {
           onDeselectAllQualities={handleDeselectAllQualities}
           loadingBuildings={loadingBuildings}
           buildingsLayer={buildingsLayer}
+          submarketLayer={submarketLayer}
+          submarketVisible={submarketVisible}
+          onSubmarketVisibilityToggle={handleSubmarketVisibilityToggle}
         />
       )}
 
@@ -235,8 +279,15 @@ const MapContainer = ({ selectedAsset }) => {
       {/* Cadastre Modal */}
       <CadastreModal
         isOpen={isCadastreModalOpen}
-        onClose={handleModalClose}
+        onClose={handleCadastreModalClose}
         cadastrePoint={selectedCadastrePoint}
+      />
+
+      {/* ✅ NEW: Submarket Modal */}
+      <SubmarketModal
+        isOpen={isSubmarketModalOpen}
+        onClose={handleSubmarketModalClose}
+        submarketData={selectedSubmarketData}
       />
     </div>
   );

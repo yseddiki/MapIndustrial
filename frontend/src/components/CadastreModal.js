@@ -1,13 +1,17 @@
-// src/components/CadastreModal.js
+// src/components/CadastreModal.js - UPDATED WITH SUBMARKET INTERSECTION DATA
 
 import React, { useState, useEffect } from 'react';
 import { CadastreService } from '../services/CadastreService';
+import { PropertyService } from '../services/PropertyService';
 
 const CadastreModal = ({ isOpen, onClose, cadastrePoint }) => {
   const [isLoading, setIsLoading] = useState(false);
   const [cadastreData, setCadastreData] = useState(null);
   const [error, setError] = useState(null);
   const [selectedAssetClass, setSelectedAssetClass] = useState('');
+  // ✅ NEW: Property creation states
+  const [isCreating, setIsCreating] = useState(false);
+  const [creationResult, setCreationResult] = useState(null);
 
   // Load data when modal opens
   useEffect(() => {
@@ -23,6 +27,9 @@ const CadastreModal = ({ isOpen, onClose, cadastrePoint }) => {
       setError(null);
       setSelectedAssetClass('');
       setIsLoading(false);
+      // ✅ NEW: Reset creation states
+      setIsCreating(false);
+      setCreationResult(null);
     }
   }, [isOpen]);
 
@@ -36,14 +43,16 @@ const CadastreModal = ({ isOpen, onClose, cadastrePoint }) => {
       // Fetch complete cadastre data
       const data = await CadastreService.fetchCadastreDataByGuid(guid);
       
-      // Also include the original point data
+      // ✅ NEW: Include submarket data from intersection if available
       const completeData = {
         ...data,
-        point: { ...cadastrePoint, ...data.point } // Merge original point data
+        point: { ...cadastrePoint, ...data.point }, // Merge original point data
+        // ✅ NEW: Include submarket data from click intersection
+        submarket: cadastrePoint.submarketData || data.submarket
       };
       
       setCadastreData(completeData);
-      console.log('✅ Cadastre data loaded:', completeData);
+      console.log('✅ Cadastre data loaded with submarket intersection:', completeData);
       
     } catch (err) {
       console.error('❌ Error loading cadastre data:', err);
@@ -53,7 +62,8 @@ const CadastreModal = ({ isOpen, onClose, cadastrePoint }) => {
     }
   };
 
-  const handleCreateProperty = () => {
+  // ✅ UPDATED: Use PropertyService API instead of URL
+  const handleCreateProperty = async () => {
     if (!selectedAssetClass) {
       alert('Please select a property type first!');
       return;
@@ -64,129 +74,43 @@ const CadastreModal = ({ isOpen, onClose, cadastrePoint }) => {
       return;
     }
 
-    const pointData = cadastreData.point;
-    const parcelData = cadastreData.parcel;
-    const buildingsData = cadastreData.buildings;
-    const submarketData = cadastreData.submarket;
-
-    // Format the address
-    const address = formatAddress(pointData);
-    
-    // Get areas
-    const parcelArea = parcelData ? parcelData.area_m2 : '';
-    const buildingArea = buildingsData && buildingsData.length > 0 ? buildingsData[0].area_m2 : '';
-
-    console.log('🏗️ Creating property in Efficy with complete data:', {
-      address,
-      selectedAssetClass,
-      pointData,
-      parcelData,
-      buildingsData,
-      submarketData
-    });
-
-    // Construct Efficy URL with ALL available data (matching your backend field mapping)
-    const params = new URLSearchParams({
-      // Source and basic identification
-      'source': 'cadastre',
-      'guid': pointData.guid || '',
-      'address': address,
-      
-      // Point/Address data (matching your backend F_ARCGIS_ADDRESS mapping)
-      'street_fr': pointData.street_fr || '',
-      'street_nl': pointData.street_nl || '',
-      'street_de': pointData.street_de || '',
-      'number': pointData.number || '',
-      'postcode': pointData.postcode || '',
-      'town_fr': pointData.town_fr || '',
-      'town_nl': pointData.town_nl || '',
-      'town_de': pointData.town_de || '',
-      'country': pointData.country || '',
-      'building_guid': pointData.building_guid || '',
-      
-      // Parcel data (matching your backend parcel mapping)
-      'parcel_key': parcelData ? parcelData.parcelkey : '',
-      'parcel_guid': parcelData ? parcelData.guid : '',
-      'parcel_area': parcelArea,
-      
-      // Building data (matching your backend building mapping)
-      'building_area': buildingArea,
-      
-      // Coordinates
-      'longitude': pointData.x || '',
-      'latitude': pointData.y || '',
-      'coordinates': pointData.x && pointData.y ? `${pointData.x},${pointData.y}` : '',
-      
-      // Asset class selection
-      'asset_class': selectedAssetClass
-    });
-
-    // Add all submarket data if available (matching your extensive backend mapping)
-    if (submarketData) {
-      const submarketParams = {
-        // Core submarket fields (matching F_OFFICE_SUBMARKET, F_LOG_INDU_SUBMARKET, F_RETAIL_SUBMARKET)
-        'office_submarket': submarketData.officesubmarket || '',
-        'logistics_submarket': submarketData.logisticsubmarket || '',
-        'retail_submarket': submarketData.retailsubmarket || '',
-        
-        // Administrative areas (matching your F_MUN_NL, F_MUN_FR, etc.)
-        'municipality_nl': submarketData.t_mun_nl || '',
-        'municipality_fr': submarketData.t_mun_fr || '',
-        'municipality_de': submarketData.t_mun_de || '',
-        'arrondissement_nl': submarketData.t_arrd_nl || '',
-        'arrondissement_fr': submarketData.t_arrd_fr || '',
-        'arrondissement_de': submarketData.t_arrd_de || '',
-        'province_nl': submarketData.t_provi_nl || '',
-        'province_fr': submarketData.t_provi_fr || '',
-        'province_de': submarketData.t_provi_de || '',
-        'region_nl': submarketData.t_regio_nl || '',
-        'region_fr': submarketData.t_regio_fr || '',
-        'region_de': submarketData.t_regio_de || '',
-        
-        // Statistical codes (matching your F_C_NIS7, F_C_NIS6, etc.)
-        'nis6_nl': submarketData.t_nis6_nl || '',
-        'nis6_fr': submarketData.t_nis6_fr || '',
-        'c_nis7': submarketData.c_nis7 || '',
-        'c_nis6': submarketData.c_nis6 || '',
-        'cnis5_2022': submarketData.cnis5_2022 || '',
-        'cnis_arrd': submarketData.cnis_arrd_ || '',
-        'cnis_provi': submarketData.cnis_provi || '',
-        'cnis_regio': submarketData.cnis_regio || '',
-        
-        // NUTS codes (matching your F_NUTS1_2021, etc.)
-        'nuts1_2021': submarketData.nuts1_2021 || '',
-        'nuts2_2021': submarketData.nuts2_2021 || '',
-        'nuts3_2021': submarketData.nuts3_2021 || '',
-        
-        // Area measurements (matching your F_M_AREA_HA, etc.)
-        'm_area_ha': submarketData.m_area_ha || '',
-        'm_peri_m': submarketData.m_peri_m || '',
-        'shape_length': submarketData.shape_leng || '',
-        'shape__length': submarketData.SHAPE__Length || '',
-        'shape__area': submarketData.SHAPE__Area || '',
-        
-        // Sector information (matching your F_SEC_NL, etc.)
-        'sector_nl': submarketData.t_sec_nl || '',
-        'sector_fr': submarketData.t_sec_fr || '',
-        'sector_de': submarketData.t_sec_de || '',
-        'municipality_district': submarketData.mun_distr || ''
-      };
-
-      // Add all submarket parameters
-      Object.keys(submarketParams).forEach(key => {
-        if (submarketParams[key]) {
-          params.append(key, submarketParams[key]);
-        }
-      });
+    // Validate property data
+    const validation = PropertyService.validatePropertyData(cadastreData);
+    if (!validation.isValid) {
+      alert(`Cannot create property: ${validation.errors.join(', ')}`);
+      return;
     }
 
-    const efficyUrl = 'https://efficy.cbre.be/crm/view/Prop/new?' + params.toString();
-    
-    console.log('🌐 Opening Efficy URL with complete data:', efficyUrl);
-    window.open(efficyUrl, '_blank');
-    
-    // Close modal after creating
-    onClose();
+    setIsCreating(true);
+    setCreationResult(null);
+
+    try {
+      console.log('🏗️ Creating property via API with data:', {
+        cadastreData,
+        assetClass: selectedAssetClass
+      });
+
+      // Create property using the API
+      const result = await PropertyService.createProperty(cadastreData, selectedAssetClass);
+
+      setCreationResult(result);
+
+      if (result.success) {
+        console.log('✅ Property created successfully:', result);
+        // Don't close modal immediately, let user see the success message
+      } else {
+        console.error('❌ Property creation failed:', result.error);
+      }
+
+    } catch (error) {
+      console.error('💥 Unexpected error creating property:', error);
+      setCreationResult({
+        success: false,
+        error: error.message || 'Unexpected error occurred'
+      });
+    } finally {
+      setIsCreating(false);
+    }
   };
 
   const formatAddress = (pointData) => {
@@ -277,7 +201,7 @@ const CadastreModal = ({ isOpen, onClose, cadastrePoint }) => {
               }}>
                 <div style={{ fontSize: '24px', marginBottom: '0.5rem' }}>📍</div>
                 <div style={{ fontSize: '16px', fontWeight: 'bold' }}>Not in Efficy</div>
-                <div style={{ fontSize: '12px', opacity: 0.8 }}>Cadastre Property</div>
+                <div style={{ fontSize: '12px', opacity: 0.8 }}>Cadastre Property with Submarket Data</div>
               </div>
 
               {/* Point Information */}
@@ -319,6 +243,86 @@ const CadastreModal = ({ isOpen, onClose, cadastrePoint }) => {
                       </span>
                     </div>
                   </div>
+                </div>
+              )}
+
+              {/* ✅ NEW: Submarket Information from Intersection */}
+              {cadastreData.submarket ? (
+                <div className="modal-section" style={{ 
+                  background: 'linear-gradient(135deg, #f0f8ff 0%, #e6f3ff 100%)', 
+                  border: '2px solid #007AC2' 
+                }}>
+                  <h4 style={{ color: '#007AC2' }}>🗺️ Submarket Information (Intersection)</h4>
+                  <div className="data-grid">
+                    <div className="data-row">
+                      <strong>Office Submarket:</strong>
+                      <span style={{ fontWeight: '600', color: '#007AC2' }}>
+                        {cadastreData.submarket.officesubmarket || 'N/A'}
+                      </span>
+                    </div>
+                    <div className="data-row">
+                      <strong>Logistics Submarket:</strong>
+                      <span style={{ fontWeight: '600', color: '#007AC2' }}>
+                        {cadastreData.submarket.logisticsubmarket || 'N/A'}
+                      </span>
+                    </div>
+                    <div className="data-row">
+                      <strong>Retail Submarket:</strong>
+                      <span style={{ fontWeight: '600', color: '#007AC2' }}>
+                        {cadastreData.submarket.retailsubmarket || 'N/A'}
+                      </span>
+                    </div>
+                    <div className="data-row">
+                      <strong>Municipality (NL):</strong>
+                      <span>{cadastreData.submarket.t_mun_nl || 'N/A'}</span>
+                    </div>
+                    <div className="data-row">
+                      <strong>Municipality (FR):</strong>
+                      <span>{cadastreData.submarket.t_mun_fr || 'N/A'}</span>
+                    </div>
+                    <div className="data-row">
+                      <strong>Province (NL):</strong>
+                      <span>{cadastreData.submarket.t_provi_nl || 'N/A'}</span>
+                    </div>
+                    <div className="data-row">
+                      <strong>Region (NL):</strong>
+                      <span>{cadastreData.submarket.t_regio_nl || 'N/A'}</span>
+                    </div>
+                    <div className="data-row">
+                      <strong>NIS6 Code:</strong>
+                      <span style={{ fontFamily: 'monospace' }}>
+                        {cadastreData.submarket.c_nis6 || 'N/A'}
+                      </span>
+                    </div>
+                    <div className="data-row">
+                      <strong>Submarket Area:</strong>
+                      <span style={{ fontWeight: '600', color: '#007AC2' }}>
+                        {cadastreData.submarket.m_area_ha 
+                          ? `${parseFloat(cadastreData.submarket.m_area_ha).toFixed(2)} hectares`
+                          : 'N/A'
+                        }
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <div className="modal-section" style={{ 
+                  background: '#fff3cd', 
+                  border: '2px solid #ffc107',
+                  color: '#856404'
+                }}>
+                  <h4 style={{ color: '#856404' }}>⚠️ Submarket Information</h4>
+                  <p style={{ margin: '0.5rem 0', fontSize: '0.9rem' }}>
+                    No submarket data found at this location. This may happen if:
+                  </p>
+                  <ul style={{ margin: '0.5rem 0', paddingLeft: '1.5rem', fontSize: '0.8rem' }}>
+                    <li>The submarket layer is not visible or loaded</li>
+                    <li>The point is outside submarket boundaries</li>
+                    <li>There's a spatial reference mismatch</li>
+                  </ul>
+                  <p style={{ margin: '0.5rem 0', fontSize: '0.8rem', fontStyle: 'italic' }}>
+                    💡 Try enabling the submarket layer to see coverage areas.
+                  </p>
                 </div>
               )}
 
@@ -392,65 +396,6 @@ const CadastreModal = ({ isOpen, onClose, cadastrePoint }) => {
                 </div>
               )}
 
-              {/* Submarket Information */}
-              {cadastreData.submarket && (
-                <div className="modal-section">
-                  <h4>🗺️ Submarket Information</h4>
-                  <div className="data-grid">
-                    <div className="data-row">
-                      <strong>Office Submarket:</strong>
-                      <span style={{ fontWeight: '600', color: '#003F2D' }}>
-                        {cadastreData.submarket.officesubmarket || 'N/A'}
-                      </span>
-                    </div>
-                    <div className="data-row">
-                      <strong>Logistics Submarket:</strong>
-                      <span style={{ fontWeight: '600', color: '#003F2D' }}>
-                        {cadastreData.submarket.logisticsubmarket || 'N/A'}
-                      </span>
-                    </div>
-                    <div className="data-row">
-                      <strong>Retail Submarket:</strong>
-                      <span style={{ fontWeight: '600', color: '#003F2D' }}>
-                        {cadastreData.submarket.retailsubmarket || 'N/A'}
-                      </span>
-                    </div>
-                    <div className="data-row">
-                      <strong>Municipality (NL):</strong>
-                      <span>{cadastreData.submarket.t_mun_nl || 'N/A'}</span>
-                    </div>
-                    <div className="data-row">
-                      <strong>Municipality (FR):</strong>
-                      <span>{cadastreData.submarket.t_mun_fr || 'N/A'}</span>
-                    </div>
-                    <div className="data-row">
-                      <strong>Arrondissement (NL):</strong>
-                      <span>{cadastreData.submarket.t_arrd_nl || 'N/A'}</span>
-                    </div>
-                    <div className="data-row">
-                      <strong>Arrondissement (FR):</strong>
-                      <span>{cadastreData.submarket.t_arrd_fr || 'N/A'}</span>
-                    </div>
-                    <div className="data-row">
-                      <strong>Province (NL):</strong>
-                      <span>{cadastreData.submarket.t_provi_nl || 'N/A'}</span>
-                    </div>
-                    <div className="data-row">
-                      <strong>Province (FR):</strong>
-                      <span>{cadastreData.submarket.t_provi_fr || 'N/A'}</span>
-                    </div>
-                    <div className="data-row">
-                      <strong>Region (NL):</strong>
-                      <span>{cadastreData.submarket.t_regio_nl || 'N/A'}</span>
-                    </div>
-                    <div className="data-row">
-                      <strong>Region (FR):</strong>
-                      <span>{cadastreData.submarket.t_regio_fr || 'N/A'}</span>
-                    </div>
-                  </div>
-                </div>
-              )}
-
               {/* Asset Class Selection */}
               <div className="asset-class-section">
                 <label className="asset-class-label">🏗️ Property Type</label>
@@ -472,7 +417,87 @@ const CadastreModal = ({ isOpen, onClose, cadastrePoint }) => {
                   <option value="other">Other</option>
                 </select>
               </div>
-              {/* Show errors if any */}
+
+              {/* ✅ NEW: Property Creation Result */}
+              {creationResult && (
+                <div className="modal-section" style={{ 
+                  background: creationResult.success 
+                    ? 'linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%)' 
+                    : 'linear-gradient(135deg, #f8d7da 0%, #f5c6cb 100%)',
+                  border: creationResult.success 
+                    ? '2px solid #28a745' 
+                    : '2px solid #dc3545',
+                  marginTop: '1rem'
+                }}>
+                  <h4 style={{ 
+                    color: creationResult.success ? '#155724' : '#721c24',
+                    margin: '0 0 1rem 0'
+                  }}>
+                    {creationResult.success ? '✅ Property Created Successfully!' : '❌ Property Creation Failed'}
+                  </h4>
+                  
+                  {creationResult.success ? (
+                    <div>
+                      <p style={{ 
+                        color: '#155724', 
+                        margin: '0.5rem 0',
+                        fontWeight: '600'
+                      }}>
+                        🎉 Property has been created in Efficy!
+                      </p>
+                      {creationResult.propertyId && (
+                        <div className="data-row">
+                          <strong>Property ID:</strong>
+                          <span style={{ 
+                            fontFamily: 'monospace', 
+                            fontWeight: '600',
+                            color: '#28a745'
+                          }}>
+                            {creationResult.propertyId}
+                          </span>
+                        </div>
+                      )}
+                      <p style={{ 
+                        color: '#155724', 
+                        margin: '0.5rem 0',
+                        fontSize: '0.9rem'
+                      }}>
+                        💡 You can now find this property in your Efficy CRM system.
+                      </p>
+                    </div>
+                  ) : (
+                    <div>
+                      <p style={{ 
+                        color: '#721c24', 
+                        margin: '0.5rem 0',
+                        fontWeight: '600'
+                      }}>
+                        Failed to create property in Efficy.
+                      </p>
+                      <p style={{ 
+                        color: '#721c24', 
+                        margin: '0.5rem 0',
+                        fontSize: '0.9rem',
+                        fontFamily: 'monospace',
+                        background: 'rgba(220, 53, 69, 0.1)',
+                        padding: '0.5rem',
+                        borderRadius: '4px'
+                      }}>
+                        Error: {creationResult.error}
+                      </p>
+                      <p style={{ 
+                        color: '#721c24', 
+                        margin: '0.5rem 0',
+                        fontSize: '0.8rem'
+                      }}>
+                        💡 Please check your network connection and try again, or contact your system administrator.
+                      </p>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Show data loading errors if any */}
               {cadastreData.errors && cadastreData.errors.length > 0 && (
                 <div style={{ 
                   background: '#fee2e2', 
@@ -495,15 +520,60 @@ const CadastreModal = ({ isOpen, onClose, cadastrePoint }) => {
         {!isLoading && !error && cadastreData && (
           <div className="modal-footer">
             <button className="modal-btn modal-btn-secondary" onClick={onClose}>
-              Cancel
+              {creationResult?.success ? 'Close' : 'Cancel'}
             </button>
-            <button 
-              className="modal-btn modal-btn-primary" 
-              onClick={handleCreateProperty}
-              disabled={!selectedAssetClass}
-            >
-              🏗️ Create this property in Efficy
-            </button>
+            
+            {/* ✅ UPDATED: Dynamic create button based on state */}
+            {isCreating ? (
+              <button 
+                className="modal-btn modal-btn-primary" 
+                disabled={true}
+                style={{ opacity: 0.7, cursor: 'not-allowed' }}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                  <div className="spinner" style={{ 
+                    width: '16px', 
+                    height: '16px', 
+                    border: '2px solid transparent',
+                    borderTop: '2px solid currentColor',
+                    borderRadius: '50%',
+                    animation: 'spin 1s linear infinite'
+                  }}></div>
+                  🏗️ Creating Property...
+                </div>
+              </button>
+            ) : creationResult?.success ? (
+              <button 
+                className="modal-btn modal-btn-primary" 
+                onClick={() => {
+                  // Open the created property in Efficy
+                  if (creationResult.propertyId) {
+                    window.open(`https://efficy.cbre.be/crm/view/Prop/${creationResult.propertyId}`, '_blank');
+                  }
+                }}
+                style={{ 
+                  background: 'linear-gradient(135deg, #28a745 0%, #20c997 100%)'
+                }}
+              >
+                🚀 Open in Efficy CRM
+              </button>
+            ) : creationResult?.success === false ? (
+              <button 
+                className="modal-btn modal-btn-primary" 
+                onClick={handleCreateProperty}
+                disabled={!selectedAssetClass}
+              >
+                🔄 Try Again
+              </button>
+            ) : (
+              <button 
+                className="modal-btn modal-btn-primary" 
+                onClick={handleCreateProperty}
+                disabled={!selectedAssetClass}
+              >
+                🏗️ Create this property in Efficy
+              </button>
+            )}
           </div>
         )}
       </div>

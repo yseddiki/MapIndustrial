@@ -6,3 +6,4 @@ export { default as ErrorContainer } from './ErrorContainer';
 export { default as LoadingOverlay } from './LoadingOverlay';
 export { default as ProcessingOverlay } from './ProcessingOverlay';
 export { default as CadastreModal } from './CadastreModal';
+export { default as SubmarketModal } from './SubmarketModal';

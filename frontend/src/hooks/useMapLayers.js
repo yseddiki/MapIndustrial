@@ -1,13 +1,14 @@
-// src/hooks/useMapLayers.js - FIXED VERSION
+// src/hooks/useMapLayers.js - UPDATED WITH SUBMARKET LAYER
 
 import { useState, useCallback } from 'react';
 import { CONFIG } from '../config/config';
-import { getDataQualityLevel, getColorForLevel, createPopupContent, createCadastrePopupContent } from '../utils/dataQuality';
+import { getDataQualityLevel, getColorForLevel, createPopupContent } from '../utils/dataQuality';
 import { CadastreService } from '../services/CadastreService';
 
 export const useMapLayers = () => {
   const [cadastreLayer, setCadastreLayer] = useState(null);
   const [buildingsLayer, setBuildingsLayer] = useState(null);
+  const [submarketLayer, setSubmarketLayer] = useState(null);
 
   // ✅ ENHANCED: Dynamic layer field inspection function with detailed logging
   const inspectLayerFields = useCallback((layer) => {
@@ -160,131 +161,9 @@ export const useMapLayers = () => {
     return extractedData;
   }, []);
 
-  // ✅ SIMPLIFIED: Helper function to show immediate point data
-  const showImmediatePointData = useCallback((pointAttributes, layerFields) => {
-    console.log('📍 Showing immediate point data:', pointAttributes);
-    
-    // Store basic point data globally
-    window.basicPointData = pointAttributes;
-    
-    // Update Point Information immediately
-    const pointDetailsEl = document.getElementById('point-details');
-    if (pointDetailsEl && pointAttributes) {
-      const address = CadastreService.formatAddress(pointAttributes);
-      
-      pointDetailsEl.innerHTML = `
-        <div style="display: grid; grid-template-columns: auto 1fr; gap: 8px; align-items: center;">
-          <strong>📍 Address:</strong><span style="color: #003F2D; font-weight: 500;">${address}</span>
-          <strong>🆔 ID:</strong><span>${pointAttributes.id || 'N/A'}</span>
-          <strong>🔑 GUID:</strong><span style="font-family: monospace; font-size: 10px;">${pointAttributes.guid || 'N/A'}</span>
-          <strong>🌍 Country:</strong><span>${pointAttributes.country || 'N/A'}</span>
-          <strong>📮 Postcode:</strong><span>${pointAttributes.postcode || 'N/A'}</span>
-          <strong>📐 Coordinates:</strong><span>${pointAttributes.x && pointAttributes.y ? `${pointAttributes.x.toFixed(6)}, ${pointAttributes.y.toFixed(6)}` : 'N/A'}</span>
-        </div>
-      `;
-      
-      console.log('✅ Immediate point data displayed');
-    }
-  }, []);
-
-  // ✅ SIMPLIFIED: Helper function to update cadastre popup with clean data display
-  const updateCadastrePopupContent = useCallback((cadastreData) => {
-    console.log('📋 Updating popup with data:', cadastreData);
-    
-    // Hide the loading message
-    const additionalLoadingEl = document.getElementById('additional-loading');
-    if (additionalLoadingEl) additionalLoadingEl.style.display = 'none';
-    
-    // Store data globally for the create function
-    window.cadastreData = cadastreData;
-    
-    // Update Point Information - always show
-    const pointDetailsEl = document.getElementById('point-details');
-    if (pointDetailsEl && cadastreData.point) {
-      const point = cadastreData.point;
-      const address = CadastreService.formatAddress(point);
-      
-      pointDetailsEl.innerHTML = `
-        <div style="display: grid; grid-template-columns: auto 1fr; gap: 8px; align-items: center;">
-          <strong>📍 Address:</strong><span style="color: #003F2D; font-weight: 500;">${address}</span>
-          <strong>🆔 ID:</strong><span>${point.id || 'N/A'}</span>
-          <strong>🔑 GUID:</strong><span style="font-family: monospace; font-size: 10px;">${point.guid || 'N/A'}</span>
-          <strong>🌍 Country:</strong><span>${point.country || 'N/A'}</span>
-          <strong>📮 Postcode:</strong><span>${point.postcode || 'N/A'}</span>
-          <strong>📐 Coordinates:</strong><span>${point.x && point.y ? `${point.x.toFixed(6)}, ${point.y.toFixed(6)}` : 'N/A'}</span>
-        </div>
-      `;
-    }
-    
-    // Update Building Information - show if available
-    const buildingInfoEl = document.getElementById('building-info');
-    const buildingDetailsEl = document.getElementById('building-details');
-    if (cadastreData.buildings && cadastreData.buildings.length > 0 && buildingDetailsEl && buildingInfoEl) {
-      buildingInfoEl.style.display = 'block';
-      
-      const building = cadastreData.buildings[0]; // Show first building
-      buildingDetailsEl.innerHTML = `
-        <div style="display: grid; grid-template-columns: auto 1fr; gap: 8px; align-items: center;">
-          <strong>🆔 ID:</strong><span>${building.id || 'N/A'}</span>
-          <strong>🔑 GUID:</strong><span style="font-family: monospace; font-size: 10px;">${building.guid || 'N/A'}</span>
-          <strong>📐 Building Area:</strong><span style="color: #003F2D; font-weight: 500;">${CadastreService.formatArea(building.area_m2)}</span>
-          <strong>🏠 Parcel Link:</strong><span style="font-family: monospace; font-size: 10px;">${building.parcel_guid || 'N/A'}</span>
-        </div>
-      `;
-    } else {
-      // Hide building section if no data
-      if (buildingInfoEl) buildingInfoEl.style.display = 'none';
-    }
-    
-    // Update Parcel Information - show if available
-    const parcelInfoEl = document.getElementById('parcel-info');
-    const parcelDetailsEl = document.getElementById('parcel-details');
-    if (cadastreData.parcel && parcelDetailsEl && parcelInfoEl) {
-      parcelInfoEl.style.display = 'block';
-      const parcel = cadastreData.parcel;
-      
-      parcelDetailsEl.innerHTML = `
-        <div style="display: grid; grid-template-columns: auto 1fr; gap: 8px; align-items: center;">
-          <strong>📋 Parcel Key:</strong><span style="color: #003F2D; font-weight: 500;">${parcel.parcelkey || 'N/A'}</span>
-          <strong>🆔 ID:</strong><span>${parcel.seq || 'N/A'}</span>
-          <strong>🔑 GUID:</strong><span style="font-family: monospace; font-size: 10px;">${parcel.guid || 'N/A'}</span>
-          <strong>📐 Parcel Area:</strong><span style="color: #003F2D; font-weight: 500;">${CadastreService.formatArea(parcel.area_m2)}</span>
-        </div>
-      `;
-    } else {
-      // Hide parcel section if no data
-      if (parcelInfoEl) parcelInfoEl.style.display = 'none';
-    }
-    
-    // Show any errors
-    if (cadastreData.errors && cadastreData.errors.length > 0) {
-      const errorInfoEl = document.getElementById('error-info');
-      const errorDetailsEl = document.getElementById('error-details');
-      if (errorInfoEl && errorDetailsEl) {
-        errorInfoEl.style.display = 'block';
-        errorDetailsEl.innerHTML = cadastreData.errors.join('<br>');
-      }
-    }
-    
-    console.log('✅ Popup updated with clean data display');
-  }, []);
-
-  // ✅ V2 UPDATE: Helper function to show error in cadastre popup
-  const showCadastrePopupError = useCallback((errorMessage) => {
-    console.error('❌ Showing cadastre popup error:', errorMessage);
-    
-    const additionalLoadingEl = document.getElementById('additional-loading');
-    const errorInfoEl = document.getElementById('error-info');
-    const errorDetailsEl = document.getElementById('error-details');
-    
-    if (additionalLoadingEl) additionalLoadingEl.style.display = 'none';
-    if (errorInfoEl) errorInfoEl.style.display = 'block';
-    if (errorDetailsEl) errorDetailsEl.innerHTML = errorMessage;
-  }, []);
-
-  // ✅ MODAL APPROACH: Set up click handling to open modal for cadastre points
-  const setupCadastreClickHandling = useCallback((view, cadastreLayer) => {
-    console.log('🎯 Setting up cadastre click handling for modal');
+  // ✅ FIXED: Set up click handling for cadastre points with proper submarket intersection
+  const setupCadastreClickHandling = useCallback((view, cadastreLayer, submarketLayerRef = null) => {
+    console.log('🎯 Setting up enhanced cadastre click handling with submarket intersection');
     
     view.on('click', async (event) => {
       try {
@@ -299,16 +178,68 @@ export const useMapLayers = () => {
         if (cadastreResults.length > 0) {
           const clickedGraphic = cadastreResults[0].graphic;
           
-          console.log('🎯 ✅ CADASTRE DOT CLICKED! Opening modal...');
+          console.log('🎯 ✅ CADASTRE DOT CLICKED! Opening modal with submarket intersection...');
           
           // Extract point data from the clicked graphic
           const pointData = extractAttributesFromGraphic(clickedGraphic, cadastreLayer.fields);
           
           console.log('📍 Extracted point data for modal:', pointData);
           
-          // Trigger modal opening with point data
+          // ✅ FIXED: Perform submarket intersection using the click coordinates directly
+          let submarketData = null;
+          if (submarketLayerRef) {
+            try {
+              console.log('🗺️ Performing submarket intersection for click coordinates:', event.mapPoint);
+              
+              // ✅ FIXED: Use the actual click coordinates from the event
+              const clickPoint = event.mapPoint;
+              
+              // Create query for submarket layer using the click point
+              const submarketQuery = submarketLayerRef.createQuery();
+              submarketQuery.geometry = clickPoint; // Use the click point directly
+              submarketQuery.spatialRelationship = 'intersects';
+              submarketQuery.returnGeometry = false;
+              submarketQuery.outFields = ['*'];
+              submarketQuery.maxRecordCount = 1; // We only need one result
+              
+              console.log('🗺️ Submarket query details:', {
+                geometry: clickPoint,
+                spatialRelationship: submarketQuery.spatialRelationship,
+                outFields: submarketQuery.outFields
+              });
+              
+              const submarketQueryResult = await submarketLayerRef.queryFeatures(submarketQuery);
+              
+              console.log('🗺️ Submarket query result:', submarketQueryResult);
+              
+              if (submarketQueryResult.features && submarketQueryResult.features.length > 0) {
+                submarketData = submarketQueryResult.features[0].attributes;
+                console.log('✅ Submarket intersection successful:', submarketData);
+              } else {
+                console.log('⚠️ No submarket found at click location - this should not happen if submarkets are visible');
+                console.log('🔍 Debug info:', {
+                  clickPoint: clickPoint,
+                  submarketLayerVisible: submarketLayerRef.visible,
+                  submarketLayerLoaded: submarketLayerRef.loaded
+                });
+              }
+              
+            } catch (submarketError) {
+              console.error('❌ Error performing submarket intersection:', submarketError);
+            }
+          } else {
+            console.log('⚠️ Submarket layer not available for intersection');
+          }
+          
+          // ✅ ENHANCED: Include submarket data in the point data
+          const enhancedPointData = {
+            ...pointData,
+            submarketData: submarketData
+          };
+          
+          // Trigger modal opening with enhanced point data including submarket
           if (window.openCadastreModal) {
-            window.openCadastreModal(pointData);
+            window.openCadastreModal(enhancedPointData);
           } else {
             console.warn('⚠️ Modal handler not available yet');
           }
@@ -321,10 +252,52 @@ export const useMapLayers = () => {
       }
     });
     
-    console.log('✅ Cadastre click handling set up for modal approach');
-  }, [inspectLayerFields, extractAttributesFromGraphic]);
+    console.log('✅ Enhanced cadastre click handling set up with fixed submarket intersection');
+  }, [extractAttributesFromGraphic]);
 
-  // ✅ FIXED: Use FeatureLayer instead of MapImageLayer for proper data access
+  // ✅ FIXED: Set up click handling for submarket layer (modal only, no popup)
+  const setupSubmarketClickHandling = useCallback((view, submarketLayerRef) => {
+    console.log('🗺️ Setting up submarket click handling for modal');
+    
+    view.on('click', async (event) => {
+      try {
+        // Perform hit test to see what was clicked
+        const response = await view.hitTest(event);
+        
+        // Check if any results are from our submarket layer
+        const submarketResults = response.results.filter(result => 
+          result.graphic && result.graphic.layer === submarketLayerRef
+        );
+        
+        if (submarketResults.length > 0) {
+          const clickedGraphic = submarketResults[0].graphic;
+          
+          console.log('🗺️ ✅ SUBMARKET CLICKED! Opening modal...');
+          
+          // Extract submarket data from the clicked graphic
+          const submarketData = extractAttributesFromGraphic(clickedGraphic, submarketLayerRef.fields);
+          
+          console.log('🗺️ Extracted submarket data:', submarketData);
+          
+          // Trigger submarket modal opening
+          if (window.openSubmarketModal) {
+            window.openSubmarketModal(submarketData);
+          } else {
+            console.warn('⚠️ Submarket modal handler not available yet');
+          }
+          
+        } else {
+          console.log('ℹ️ No submarket features clicked');
+        }
+      } catch (error) {
+        console.error('❌ Error in submarket click handling:', error);
+      }
+    });
+    
+    console.log('✅ Submarket click handling set up for modal only');
+  }, [extractAttributesFromGraphic]);
+
+  // ✅ FIXED: Use FeatureLayer without popup (modal only)
   const createCadastreLayer = useCallback(async () => {
     // Ensure ArcGIS API is loaded
     if (!window.require) {
@@ -359,17 +332,15 @@ export const useMapLayers = () => {
           }
         }
       },
-      popupTemplate: {
-        title: "📍 Cadastre Property",
-        content: createCadastrePopupContent()
-      },
+      // ✅ REMOVED: No popup template - modal only
+      popupTemplate: null,
       // ✅ FIXED: Set outFields to get all fields
       outFields: ["*"],
       // ✅ FIXED: Enable feature querying
       definitionExpression: "1=1" // Show all features
     });
 
-    console.log('🏛️ Cadastre FeatureLayer created with white dots and full data access:', {
+    console.log('🏛️ Cadastre FeatureLayer created (modal only, no popup):', {
       url: layer.url,
       title: layer.title,
       visible: layer.visible,
@@ -377,20 +348,81 @@ export const useMapLayers = () => {
       symbolColor: 'white with black outline',
       symbolSize: '7px',
       outFields: layer.outFields,
-      canQuery: true
+      canQuery: true,
+      popupEnabled: false
     });
 
     // ✅ FIXED: Wait for layer to load and log field information
     layer.when(() => {
-      console.log('✅ Cadastre layer loaded successfully');
+      console.log('✅ Cadastre layer loaded successfully (modal only)');
       console.log('📋 Available fields:', layer.fields.map(f => f.name));
       console.log('🔗 Layer capabilities:', layer.capabilities);
-      console.log('🎯 Layer ready for click handling');
+      console.log('🎯 Layer ready for click handling (modal only)');
     }).catch(error => {
       console.error('❌ Failed to load cadastre layer:', error);
     });
 
     setCadastreLayer(layer);
+    return layer;
+  }, []);
+
+  // ✅ FIXED: Create submarket layer without popup (modal only)
+  const createSubmarketLayer = useCallback(async () => {
+    // Ensure ArcGIS API is loaded
+    if (!window.require) {
+      throw new Error('ArcGIS API not loaded yet');
+    }
+
+    const { FeatureLayer } = await new Promise((resolve, reject) => {
+      window.require([
+        'esri/layers/FeatureLayer'
+      ], (FeatureLayer) => {
+        resolve({ FeatureLayer });
+      }, reject);
+    });
+
+    // Create the submarket layer
+    const layer = new FeatureLayer({
+      url: CadastreService.LAYERS.SUBMARKETS,
+      title: 'Submarkets',
+      opacity: 0.3, // Semi-transparent so buildings show through
+      visible: false, // Start hidden
+      renderer: {
+        type: "simple",
+        symbol: {
+          type: "simple-fill",
+          color: [0, 122, 194, 0.2], // Light blue with transparency
+          outline: {
+            color: [0, 122, 194, 0.8], // Darker blue outline
+            width: 2
+          }
+        }
+      },
+      // ✅ REMOVED: No popup template - modal only
+      popupTemplate: null,
+      outFields: ["*"],
+      definitionExpression: "1=1"
+    });
+
+    console.log('🗺️ Submarket FeatureLayer created (modal only, no popup):', {
+      url: layer.url,
+      title: layer.title,
+      visible: layer.visible,
+      type: layer.type,
+      opacity: layer.opacity,
+      popupEnabled: false
+    });
+
+    // Wait for layer to load and log field information
+    layer.when(() => {
+      console.log('✅ Submarket layer loaded successfully (modal only)');
+      console.log('📋 Available submarket fields:', layer.fields.map(f => f.name));
+      console.log('🎯 Submarket layer ready for click handling (modal only)');
+    }).catch(error => {
+      console.error('❌ Failed to load submarket layer:', error);
+    });
+
+    setSubmarketLayer(layer);
     return layer;
   }, []);
 
@@ -560,13 +592,63 @@ export const useMapLayers = () => {
     }
   }, [cadastreLayer]);
 
+  // ✅ NEW: Update submarket layer visibility
+  const updateSubmarketVisibility = useCallback((visible) => {
+    if (submarketLayer) {
+      console.log(`🗺️ Submarket layer visibility changing to: ${visible}`);
+      
+      if (visible) {
+        console.log('📊 Loading submarket layer - this may take a moment...');
+        console.log('🎯 When visible, click on any submarket area to see data!');
+        
+        const handleLayerLoad = () => {
+          setTimeout(() => {
+            console.log('🗺️ Submarket layer is now visible and clickable');
+            console.log('🔍 Submarket layer details:', {
+              url: submarketLayer.url,
+              title: submarketLayer.title,
+              type: submarketLayer.type,
+              visible: submarketLayer.visible,
+              opacity: submarketLayer.opacity,
+              fieldsCount: submarketLayer.fields?.length || 0
+            });
+            
+            if (submarketLayer.fields) {
+              console.log('📋 Available submarket fields:', submarketLayer.fields.map(f => f.name));
+            }
+          }, 1000);
+        };
+
+        if (!submarketLayer.visible) {
+          submarketLayer.watch('visible', (newVisible) => {
+            if (newVisible) {
+              handleLayerLoad();
+            }
+          });
+        } else {
+          handleLayerLoad();
+        }
+      } else {
+        console.log('🙈 Hiding submarket layer');
+      }
+      
+      submarketLayer.visible = visible;
+    } else {
+      console.log('❌ Submarket layer not available yet');
+    }
+  }, [submarketLayer]);
+
   return {
     cadastreLayer,
     buildingsLayer,
+    submarketLayer,
     createCadastreLayer,
     createBuildingsLayer,
+    createSubmarketLayer,
     addBuildingsToMap,
     updateCadastreVisibility,
-    setupCadastreClickHandling
+    updateSubmarketVisibility,
+    setupCadastreClickHandling,
+    setupSubmarketClickHandling
   };
 };

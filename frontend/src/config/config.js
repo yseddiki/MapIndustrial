@@ -1,11 +1,13 @@
-// src/config/config.js - FIXED VERSION
+// src/config/config.js - UPDATED WITH PROPERTY API
 
 export const CONFIG = {
   API_ENDPOINTS: {
-    EFFICY_CRM: "https://efficy.cbre.be/crm/json"
+    EFFICY_CRM: "https://efficy.cbre.be/crm/json",
+    PROPERTY_API: "https://propertywebservice-rq67n.ondigitalocean.app/efficy/entity/Prop?key=0"
   },
   API_KEYS: {
-    EFFICY: "65D8CAECB10F43809F938ECB571EDADF"
+    EFFICY: "65D8CAECB10F43809F938ECB571EDADF",
+    PROPERTY: "B4B1BE19638C4028A956AE78B443FF96" // ✅ NEW: Add your property API key here
   },
   MAP: {
     CENTER: [4.3517, 50.8503], // Brussels, Belgium [longitude, latitude]

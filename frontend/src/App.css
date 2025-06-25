@@ -1028,6 +1028,254 @@ html, body, #root {
     font-size: 1.3rem;
   }
 }
+/* Additional CSS for Submarket Layer Support */
+/* Add this to your existing App.css file */
+
+/* Submarket layer specific popup styling */
+.esri-popup__content .submarket-popup {
+  font-family: inherit;
+  max-width: 400px;
+}
+
+.esri-popup__content .submarket-popup h4 {
+  color: #007AC2;
+  margin: 0.5rem 0;
+  border-bottom: 1px solid #e5e7eb;
+  padding-bottom: 0.25rem;
+}
+
+.esri-popup__content .submarket-popup .submarket-grid {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 0.5rem;
+  align-items: center;
+  margin: 0.5rem 0;
+}
+
+.esri-popup__content .submarket-popup .submarket-value {
+  color: #007AC2;
+  font-weight: 600;
+}
+
+/* Layer control updates for submarket */
+.layer-control .submarket-layer-item {
+  background: rgba(0, 122, 194, 0.1);
+  border: 1px solid rgba(0, 122, 194, 0.3);
+  border-radius: 6px;
+  padding: 0.5rem;
+  margin: 0.5rem 0;
+}
+
+.layer-control .submarket-layer-item:hover {
+  background: rgba(0, 122, 194, 0.2);
+  border-color: rgba(0, 122, 194, 0.5);
+}
+
+/* Submarket modal specific styling */
+.submarket-modal .modal-header {
+  background: linear-gradient(135deg, #007AC2 0%, #005B94 100%);
+}
+
+.submarket-modal .submarket-section {
+  background: #f0f8ff;
+  border-left: 4px solid #007AC2;
+}
+
+.submarket-modal .submarket-value {
+  color: #007AC2;
+  font-weight: 600;
+}
+
+/* Visual hierarchy for submarket data */
+.submarket-modal .admin-section {
+  background: #f8f9fa;
+}
+
+.submarket-modal .stats-section {
+  background: #fff5e1;
+  border-left: 4px solid #ff8c00;
+}
+
+.submarket-modal .geo-section {
+  background: #f0fff0;
+  border-left: 4px solid #32cd32;
+}
+
+/* Responsive adjustments for submarket layer */
+@media (max-width: 768px) {
+  .layer-control .submarket-layer-item {
+    padding: 0.25rem;
+    margin: 0.25rem 0;
+  }
+  
+  .submarket-modal .modal-content {
+    width: 95%;
+    margin: 1rem;
+  }
+}
+/* Additional CSS for Submarket Layer Support and Property Creation */
+/* Add this to your existing App.css file */
+
+/* Submarket layer specific popup styling */
+.esri-popup__content .submarket-popup {
+  font-family: inherit;
+  max-width: 400px;
+}
+
+.esri-popup__content .submarket-popup h4 {
+  color: #007AC2;
+  margin: 0.5rem 0;
+  border-bottom: 1px solid #e5e7eb;
+  padding-bottom: 0.25rem;
+}
+
+.esri-popup__content .submarket-popup .submarket-grid {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 0.5rem;
+  align-items: center;
+  margin: 0.5rem 0;
+}
+
+.esri-popup__content .submarket-popup .submarket-value {
+  color: #007AC2;
+  font-weight: 600;
+}
+
+/* Layer control updates for submarket */
+.layer-control .submarket-layer-item {
+  background: rgba(0, 122, 194, 0.1);
+  border: 1px solid rgba(0, 122, 194, 0.3);
+  border-radius: 6px;
+  padding: 0.5rem;
+  margin: 0.5rem 0;
+}
+
+.layer-control .submarket-layer-item:hover {
+  background: rgba(0, 122, 194, 0.2);
+  border-color: rgba(0, 122, 194, 0.5);
+}
+
+/* Submarket modal specific styling */
+.submarket-modal .modal-header {
+  background: linear-gradient(135deg, #007AC2 0%, #005B94 100%);
+}
+
+.submarket-modal .submarket-section {
+  background: #f0f8ff;
+  border-left: 4px solid #007AC2;
+}
+
+.submarket-modal .submarket-value {
+  color: #007AC2;
+  font-weight: 600;
+}
+
+/* Visual hierarchy for submarket data */
+.submarket-modal .admin-section {
+  background: #f8f9fa;
+}
+
+.submarket-modal .stats-section {
+  background: #fff5e1;
+  border-left: 4px solid #ff8c00;
+}
+
+.submarket-modal .geo-section {
+  background: #f0fff0;
+  border-left: 4px solid #32cd32;
+}
+
+/* ✅ NEW: Property creation states styling */
+.property-creation-loading {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  opacity: 0.8;
+}
+
+.property-creation-success {
+  background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%);
+  border: 2px solid #28a745;
+  color: #155724;
+}
+
+.property-creation-error {
+  background: linear-gradient(135deg, #f8d7da 0%, #f5c6cb 100%);
+  border: 2px solid #dc3545;
+  color: #721c24;
+}
+
+/* ✅ NEW: Inline spinner for buttons */
+.btn-spinner {
+  width: 16px;
+  height: 16px;
+  border: 2px solid transparent;
+  border-top: 2px solid currentColor;
+  border-radius: 50%;
+  animation: btnSpin 1s linear infinite;
+}
+
+@keyframes btnSpin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* ✅ NEW: Success button styling */
+.modal-btn-success {
+  background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+  color: white;
+  border: none;
+  padding: 0.75rem 1.5rem;
+  border-radius: 25px;
+  font-weight: 600;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.modal-btn-success:hover {
+  background: linear-gradient(135deg, #20c997 0%, #28a745 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 12px rgba(40, 167, 69, 0.3);
+}
+
+/* ✅ NEW: Error state button styling */
+.modal-btn-retry {
+  background: linear-gradient(135deg, #ffc107 0%, #fd7e14 100%);
+  color: #212529;
+  border: none;
+  padding: 0.75rem 1.5rem;
+  border-radius: 25px;
+  font-weight: 600;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.modal-btn-retry:hover {
+  background: linear-gradient(135deg, #fd7e14 0%, #ffc107 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 12px rgba(255, 193, 7, 0.3);
+}
+
+/* Responsive adjustments for submarket layer */
+@media (max-width: 768px) {
+  .layer-control .submarket-layer-item {
+    padding: 0.25rem;
+    margin: 0.25rem 0;
+  }
+  
+  .submarket-modal .modal-content {
+    width: 95%;
+    margin: 1rem;
+  }
+
+  .property-creation-loading {
+    flex-direction: column;
+    gap: 0.25rem;
+  }
+}
 
 /* Import ArcGIS CSS */
 @import url('https://js.arcgis.com/4.28/esri/themes/light/main.css');

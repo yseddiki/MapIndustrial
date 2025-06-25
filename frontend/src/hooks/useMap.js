@@ -1,4 +1,4 @@
-// src/hooks/useMap.js
+// src/hooks/useMap.js - UPDATED TO SUPPORT MULTIPLE LAYERS
 
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { CONFIG } from '../config/config';
@@ -51,17 +51,27 @@ export const useMap = (mapContainerRef) => {
     });
   }, []);
 
-  const initializeMap = useCallback(async (cadastreLayer, buildingsLayer) => {
+  // ✅ UPDATED: Initialize map with multiple layers in correct order
+  const initializeMap = useCallback(async (...layers) => {
     try {
       setError(null);
       
       // Load ArcGIS modules
       const { Map, MapView } = await loadArcGISModules();
 
-      // Create map with layers - PUT BUILDINGS LAYER ON TOP
+      // ✅ UPDATED: Create map with layers in the order they were passed
+      // Expected order: submarketLayer, cadastreLayer, buildingsLayer (bottom to top)
+      const validLayers = layers.filter(layer => layer !== null && layer !== undefined);
+      
+      console.log('🗺️ Initializing map with layers:', validLayers.map(layer => ({
+        title: layer.title,
+        type: layer.type,
+        visible: layer.visible
+      })));
+
       const map = new Map({
         basemap: CONFIG.MAP.BASEMAP,
-        layers: [cadastreLayer, buildingsLayer]
+        layers: validLayers // Add all layers in order
       });
 
       // Create map view
@@ -75,19 +85,26 @@ export const useMap = (mapContainerRef) => {
         }
       });
 
-      // ✅ V2 UPDATE: Simplified popup behavior for all initializations
+      // ✅ FIXED: Disable all popups completely - only use modals
       view.popup.dockEnabled = false;  // No docking
       view.popup.collapseEnabled = false;  // No collapse
       view.popup.spinnerEnabled = false;  // No loading spinner
-      view.popup.highlightEnabled = true;  // Keep highlight for clarity
-      view.popup.autoOpenEnabled = true;  // Auto open on click
-      view.popup.actions = [];  // Remove all complex actions
+      view.popup.highlightEnabled = false;  // No highlight
+      view.popup.autoOpenEnabled = false;  // Never auto open popups
+      view.popup.actions = [];  // Remove all actions
+      view.popup.visible = false;  // Hide popup completely
+      
+      // ✅ ADDITIONAL: Ensure popup never shows
+      view.popup.close();
 
-      console.log('✅ V2: Simplified popup configuration applied:', {
+      console.log('✅ V2: Popups completely disabled - modal only approach:', {
         dockEnabled: view.popup.dockEnabled,
         collapseEnabled: view.popup.collapseEnabled,
         spinnerEnabled: view.popup.spinnerEnabled,
-        actionsCount: view.popup.actions.length
+        autoOpenEnabled: view.popup.autoOpenEnabled,
+        visible: view.popup.visible,
+        actionsCount: view.popup.actions.length,
+        layersCount: validLayers.length
       });
 
       // Store view reference
@@ -95,7 +112,7 @@ export const useMap = (mapContainerRef) => {
 
       // Handle view ready event
       view.when(() => {
-        console.log('Map loaded successfully with simplified popups');
+        console.log('Map loaded successfully with simplified popups and', validLayers.length, 'layers');
         setIsMapReady(true);
       }, (error) => {
         console.error('Map view failed to load:', error);
@@ -155,15 +172,17 @@ export const useMap = (mapContainerRef) => {
         zoom: CONFIG.MAP.ZOOM
       });
       
-      // ✅ V2 UPDATE: Apply same simplified popup behavior to fallback basemap
+      // ✅ FIXED: Disable all popups for fallback map too
       view.popup.dockEnabled = false;
       view.popup.collapseEnabled = false;
       view.popup.spinnerEnabled = false;
-      view.popup.highlightEnabled = true;
-      view.popup.autoOpenEnabled = true;
+      view.popup.highlightEnabled = false;
+      view.popup.autoOpenEnabled = false;
       view.popup.actions = [];
+      view.popup.visible = false;
+      view.popup.close();
 
-      console.log('✅ V2: Simplified popup configuration applied to fallback map');
+      console.log('✅ V2: Popups completely disabled for fallback map - modal only');
 
       view.when(() => {
         setIsMapReady(true);

@@ -1,4 +1,4 @@
-// src/components/LayerControl.js
+// src/components/LayerControl.js - UPDATED WITH SUBMARKET CONTROLS
 
 import React from 'react';
 
@@ -17,7 +17,11 @@ const LayerControl = ({
   onSelectAllQualities,
   onDeselectAllQualities,
   loadingBuildings,
-  buildingsLayer
+  buildingsLayer,
+  // ✅ NEW: Submarket layer controls
+  submarketLayer,
+  submarketVisible,
+  onSubmarketVisibilityToggle
 }) => {
   return (
     <div className={`layer-control ${isProcessing ? 'processing' : ''}`}>
@@ -50,6 +54,59 @@ const LayerControl = ({
             Found {buildings.length} building{buildings.length !== 1 ? 's' : ''}
           </p>
         )}
+      </div>
+
+      {/* ✅ NEW: Map Layers Section */}
+      <div className="layer-item">
+        <h4 className="section-title">Map Layers</h4>
+        
+        {/* Submarket Layer Toggle */}
+        <div className="quality-filter-item">
+          <label>
+            <input
+              type="checkbox"
+              checked={submarketVisible}
+              onChange={onSubmarketVisibilityToggle}
+            />
+            <div className="quality-dot" style={{ 
+              backgroundColor: '#007AC2', 
+              opacity: 0.3,
+              border: '2px solid #007AC2'
+            }}></div>
+            <span className="quality-label">
+              🗺️ Submarkets Layer
+            </span>
+          </label>
+          {submarketVisible && (
+            <div style={{ 
+              fontSize: '0.7rem', 
+              color: '#17E88F', 
+              marginLeft: '1.5rem', 
+              marginTop: '0.25rem',
+              fontWeight: '500'
+            }}>
+              💡 Click any submarket area to view details
+            </div>
+          )}
+        </div>
+
+        {/* Buildings Layer Info */}
+        <div className="quality-filter-item">
+          <label style={{ cursor: 'default' }}>
+            <input
+              type="checkbox"
+              checked={true}
+              disabled={true}
+              style={{ opacity: 0.5 }}
+            />
+            <div className="quality-dot" style={{ 
+              backgroundColor: '#17E88F'
+            }}></div>
+            <span className="quality-label" style={{ opacity: 0.7 }}>
+              🏢 Buildings Layer (Always On)
+            </span>
+          </label>
+        </div>
       </div>
 
       {/* Quality Filters Section */}
@@ -180,6 +237,11 @@ const LayerControl = ({
         {buildingsLayer && (
           <p className="status-text" style={{ fontSize: '0.7rem', marginTop: '0.25rem' }}>
             Showing: {buildingsLayer.graphics.length} buildings
+          </p>
+        )}
+        {submarketLayer && (
+          <p className="status-text" style={{ fontSize: '0.7rem', marginTop: '0.25rem' }}>
+            Submarket Layer: {submarketVisible ? '✅ Visible' : '❌ Hidden'}
           </p>
         )}
       </div>
