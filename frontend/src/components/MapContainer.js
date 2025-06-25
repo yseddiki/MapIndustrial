@@ -1,4 +1,4 @@
-// src/components/MapContainer.js - UPDATED WITH SUBMARKET LAYER SUPPORT
+// src/components/MapContainer.js - UPDATED WITH URL PARAMETER SUPPORT
 
 import React, { useRef, useEffect, useState } from 'react';
 import { useArcGISAPI } from '../hooks/useArcGISAPI';
@@ -13,17 +13,25 @@ import LayerControl from './LayerControl';
 import CadastreModal from './CadastreModal';
 import SubmarketModal from './SubmarketModal';
 
-const MapContainer = ({ selectedAsset }) => {
+const MapContainer = ({ selectedAsset, preSelectedAssetClass, preSelectedSubAssetClass }) => {
   const mapContainerRef = useRef(null);
   
   // Modal state
   const [isCadastreModalOpen, setIsCadastreModalOpen] = useState(false);
   const [selectedCadastrePoint, setSelectedCadastrePoint] = useState(null);
   
-  // ✅ NEW: Submarket modal state
+  // Submarket modal state
   const [isSubmarketModalOpen, setIsSubmarketModalOpen] = useState(false);
   const [selectedSubmarketData, setSelectedSubmarketData] = useState(null);
   const [submarketVisible, setSubmarketVisible] = useState(false);
+  
+  // ✅ NEW: Log URL parameters for debugging
+  useEffect(() => {
+    console.log('🎯 MapContainer received URL parameters:', {
+      assetClass: preSelectedAssetClass,
+      subAssetClass: preSelectedSubAssetClass
+    });
+  }, [preSelectedAssetClass, preSelectedSubAssetClass]);
   
   // Custom hooks
   const {
@@ -90,7 +98,6 @@ const MapContainer = ({ selectedAsset }) => {
       setIsCadastreModalOpen(true);
     };
 
-    // ✅ NEW: Set up global submarket modal handler
     window.openSubmarketModal = (submarketData) => {
       console.log('🗺️ Opening submarket modal with data:', submarketData);
       setSelectedSubmarketData(submarketData);
@@ -109,13 +116,11 @@ const MapContainer = ({ selectedAsset }) => {
     setSelectedCadastrePoint(null);
   };
 
-  // ✅ NEW: Handle submarket modal close
   const handleSubmarketModalClose = () => {
     setIsSubmarketModalOpen(false);
     setSelectedSubmarketData(null);
   };
 
-  // ✅ NEW: Handle submarket visibility toggle
   const handleSubmarketVisibilityToggle = () => {
     const newVisibility = !submarketVisible;
     setSubmarketVisible(newVisibility);
@@ -133,7 +138,7 @@ const MapContainer = ({ selectedAsset }) => {
         
         setProcessing(true, 'Initializing map...');
         
-        // ✅ UPDATED: Create layers including submarket layer
+        // Create layers including submarket layer
         setProcessing(true, 'Creating map layers...');
         const cadastre = await createCadastreLayer();
         const buildingsLayerInstance = await createBuildingsLayer();
@@ -145,7 +150,7 @@ const MapContainer = ({ selectedAsset }) => {
           submarket: submarketLayerInstance
         });
         
-        // ✅ UPDATED: Initialize map with all layers - ORDER MATTERS: submarket on bottom, buildings on top
+        // Initialize map with all layers - ORDER MATTERS: submarket on bottom, buildings on top
         const { map, view } = await initializeMap(submarketLayerInstance, cadastre, buildingsLayerInstance);
         
         console.log('✅ Map initialized with all layers:', {
@@ -161,7 +166,7 @@ const MapContainer = ({ selectedAsset }) => {
           console.warn('❌ Cannot set up cadastre click handling - missing cadastre layer or view');
         }
 
-        // ✅ NEW: Set up submarket click handling
+        // Set up submarket click handling
         if (submarketLayerInstance && view) {
           console.log('🗺️ Setting up submarket click handling for modal...');
           setupSubmarketClickHandling(view, submarketLayerInstance);
@@ -276,14 +281,16 @@ const MapContainer = ({ selectedAsset }) => {
         <LoadingOverlay />
       )}
 
-      {/* Cadastre Modal */}
+      {/* ✅ UPDATED: Cadastre Modal with URL Parameter Support */}
       <CadastreModal
         isOpen={isCadastreModalOpen}
         onClose={handleCadastreModalClose}
         cadastrePoint={selectedCadastrePoint}
+        preSelectedAssetClass={preSelectedAssetClass}
+        preSelectedSubAssetClass={preSelectedSubAssetClass}
       />
 
-      {/* ✅ NEW: Submarket Modal */}
+      {/* Submarket Modal */}
       <SubmarketModal
         isOpen={isSubmarketModalOpen}
         onClose={handleSubmarketModalClose}

@@ -1276,6 +1276,839 @@ html, body, #root {
     gap: 0.25rem;
   }
 }
+/* Enhanced CSS for PropertyService Integration - Add to App.css */
 
+/* ✅ NEW: Enhanced button states for property creation */
+.modal-btn {
+  padding: 0.75rem 1.5rem;
+  border: none;
+  border-radius: 25px;
+  font-weight: 600;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  min-width: 160px;
+}
+
+.modal-btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.modal-btn-secondary {
+  background: var(--cbre-light-grey);
+  color: var(--cbre-dark-grey);
+}
+
+.modal-btn-secondary:hover:not(:disabled) {
+  background: var(--cbre-dark-grey);
+  color: white;
+  transform: translateY(-1px);
+}
+
+.modal-btn-primary {
+  background: linear-gradient(135deg, var(--cbre-accent-green) 0%, #00C896 100%);
+  color: var(--cbre-dark-green);
+}
+
+.modal-btn-primary:hover:not(:disabled) {
+  background: linear-gradient(135deg, #00C896 0%, var(--cbre-accent-green) 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 12px rgba(23, 232, 143, 0.3);
+}
+
+.modal-btn-primary:disabled {
+  background: linear-gradient(135deg, #ccc 0%, #999 100%);
+  color: #666;
+}
+
+/* ✅ NEW: Success button styling */
+.modal-btn-success {
+  background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+  color: white;
+  border: none;
+  padding: 0.75rem 1.5rem;
+  border-radius: 25px;
+  font-weight: 600;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  min-width: 160px;
+}
+
+.modal-btn-success:hover {
+  background: linear-gradient(135deg, #20c997 0%, #28a745 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 12px rgba(40, 167, 69, 0.3);
+}
+
+/* ✅ NEW: Retry button styling */
+.modal-btn-retry {
+  background: linear-gradient(135deg, #ffc107 0%, #fd7e14 100%);
+  color: #212529;
+  border: none;
+  padding: 0.75rem 1.5rem;
+  border-radius: 25px;
+  font-weight: 600;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  min-width: 160px;
+}
+
+.modal-btn-retry:hover {
+  background: linear-gradient(135deg, #fd7e14 0%, #ffc107 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 12px rgba(255, 193, 7, 0.3);
+}
+
+/* ✅ NEW: Inline spinner for buttons */
+.btn-spinner {
+  width: 16px;
+  height: 16px;
+  border: 2px solid transparent;
+  border-top: 2px solid currentColor;
+  border-radius: 50%;
+  animation: btnSpin 1s linear infinite;
+}
+
+@keyframes btnSpin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* ✅ NEW: Enhanced creation result states */
+.creation-result-success {
+  background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%);
+  border: 2px solid #28a745;
+  color: #155724;
+  padding: 1rem;
+  border-radius: 8px;
+  margin-top: 1rem;
+  animation: slideInSuccess 0.5s ease-out;
+}
+
+.creation-result-error {
+  background: linear-gradient(135deg, #f8d7da 0%, #f5c6cb 100%);
+  border: 2px solid #dc3545;
+  color: #721c24;
+  padding: 1rem;
+  border-radius: 8px;
+  margin-top: 1rem;
+  animation: slideInError 0.5s ease-out;
+}
+
+@keyframes slideInSuccess {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+    background: #fff;
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+    background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%);
+  }
+}
+
+@keyframes slideInError {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+    background: #fff;
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+    background: linear-gradient(135deg, #f8d7da 0%, #f5c6cb 100%);
+  }
+}
+
+/* ✅ NEW: Enhanced asset class dropdown for creation states */
+.asset-class-dropdown:disabled {
+  background-color: #f8f9fa;
+  color: #6c757d;
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+/* ✅ NEW: Property creation loading overlay enhancement */
+.property-creation-loading {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  opacity: 0.8;
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0% { opacity: 0.8; }
+  50% { opacity: 1; }
+  100% { opacity: 0.8; }
+}
+
+/* ✅ NEW: Enhanced modal footer layout */
+.modal-footer {
+  padding: 1rem 1.5rem;
+  background: #f8f9fa;
+  border-top: 1px solid #e5e7eb;
+  display: flex;
+  gap: 1rem;
+  justify-content: flex-end;
+  align-items: center;
+}
+
+/* ✅ NEW: Responsive enhancements for mobile */
+@media (max-width: 768px) {
+  .modal-footer {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+  
+  .modal-btn {
+    width: 100%;
+    min-width: auto;
+  }
+  
+  .creation-result-success,
+  .creation-result-error {
+    margin: 0.5rem 0;
+    padding: 0.75rem;
+  }
+}
+
+/* ✅ NEW: Focus states for accessibility */
+.modal-btn:focus {
+  outline: 3px solid rgba(23, 232, 143, 0.3);
+  outline-offset: 2px;
+}
+
+.asset-class-dropdown:focus {
+  outline: none;
+  border-color: var(--cbre-accent-green);
+  box-shadow: 0 0 0 3px rgba(23, 232, 143, 0.1);
+}
+
+/* ✅ NEW: Enhanced property data display */
+.property-data-highlight {
+  background: linear-gradient(135deg, #fff3cd 0%, #ffeaa7 100%);
+  border-left: 4px solid #ffc107;
+  padding: 0.75rem;
+  margin: 0.5rem 0;
+  border-radius: 6px;
+  font-weight: 500;
+}
+
+.property-coordinate-display {
+  font-family: 'Courier New', monospace;
+  background: #f8f9fa;
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  font-size: 0.85rem;
+  color: #495057;
+}
+/* Enhanced CSS for PropertyService Integration - Add to App.css */
+
+/* ✅ NEW: Enhanced button states for property creation */
+.modal-btn {
+  padding: 0.75rem 1.5rem;
+  border: none;
+  border-radius: 25px;
+  font-weight: 600;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  min-width: 160px;
+}
+
+.modal-btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.modal-btn-secondary {
+  background: var(--cbre-light-grey);
+  color: var(--cbre-dark-grey);
+}
+
+.modal-btn-secondary:hover:not(:disabled) {
+  background: var(--cbre-dark-grey);
+  color: white;
+  transform: translateY(-1px);
+}
+
+.modal-btn-primary {
+  background: linear-gradient(135deg, var(--cbre-accent-green) 0%, #00C896 100%);
+  color: var(--cbre-dark-green);
+}
+
+.modal-btn-primary:hover:not(:disabled) {
+  background: linear-gradient(135deg, #00C896 0%, var(--cbre-accent-green) 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 12px rgba(23, 232, 143, 0.3);
+}
+
+.modal-btn-primary:disabled {
+  background: linear-gradient(135deg, #ccc 0%, #999 100%);
+  color: #666;
+}
+
+/* ✅ NEW: Success button styling */
+.modal-btn-success {
+  background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+  color: white;
+  border: none;
+  padding: 0.75rem 1.5rem;
+  border-radius: 25px;
+  font-weight: 600;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  min-width: 160px;
+}
+
+.modal-btn-success:hover {
+  background: linear-gradient(135deg, #20c997 0%, #28a745 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 12px rgba(40, 167, 69, 0.3);
+}
+
+/* ✅ NEW: Retry button styling */
+.modal-btn-retry {
+  background: linear-gradient(135deg, #ffc107 0%, #fd7e14 100%);
+  color: #212529;
+  border: none;
+  padding: 0.75rem 1.5rem;
+  border-radius: 25px;
+  font-weight: 600;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  min-width: 160px;
+}
+
+.modal-btn-retry:hover {
+  background: linear-gradient(135deg, #fd7e14 0%, #ffc107 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 12px rgba(255, 193, 7, 0.3);
+}
+
+/* ✅ NEW: Inline spinner for buttons */
+.btn-spinner {
+  width: 16px;
+  height: 16px;
+  border: 2px solid transparent;
+  border-top: 2px solid currentColor;
+  border-radius: 50%;
+  animation: btnSpin 1s linear infinite;
+}
+
+@keyframes btnSpin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* ✅ NEW: Enhanced creation result states */
+.creation-result-success {
+  background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%);
+  border: 2px solid #28a745;
+  color: #155724;
+  padding: 1rem;
+  border-radius: 8px;
+  margin-top: 1rem;
+  animation: slideInSuccess 0.5s ease-out;
+}
+
+.creation-result-error {
+  background: linear-gradient(135deg, #f8d7da 0%, #f5c6cb 100%);
+  border: 2px solid #dc3545;
+  color: #721c24;
+  padding: 1rem;
+  border-radius: 8px;
+  margin-top: 1rem;
+  animation: slideInError 0.5s ease-out;
+}
+
+@keyframes slideInSuccess {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+    background: #fff;
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+    background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%);
+  }
+}
+
+@keyframes slideInError {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+    background: #fff;
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+    background: linear-gradient(135deg, #f8d7da 0%, #f5c6cb 100%);
+  }
+}
+
+/* ✅ REMOVED: Asset class dropdown styles - no longer needed */
+
+/* ✅ NEW: Property creation loading overlay enhancement */
+.property-creation-loading {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  opacity: 0.8;
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0% { opacity: 0.8; }
+  50% { opacity: 1; }
+  100% { opacity: 0.8; }
+}
+
+/* ✅ NEW: Enhanced modal footer layout */
+.modal-footer {
+  padding: 1rem 1.5rem;
+  background: #f8f9fa;
+  border-top: 1px solid #e5e7eb;
+  display: flex;
+  gap: 1rem;
+  justify-content: flex-end;
+  align-items: center;
+}
+
+/* ✅ NEW: Responsive enhancements for mobile */
+@media (max-width: 768px) {
+  .modal-footer {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+  
+  .modal-btn {
+    width: 100%;
+    min-width: auto;
+  }
+  
+  .creation-result-success,
+  .creation-result-error {
+    margin: 0.5rem 0;
+    padding: 0.75rem;
+  }
+}
+
+/* ✅ NEW: Focus states for accessibility */
+.modal-btn:focus {
+  outline: 3px solid rgba(23, 232, 143, 0.3);
+  outline-offset: 2px;
+}
+
+/* ✅ REMOVED: Asset class dropdown focus styles - no longer needed */
+
+/* ✅ NEW: Enhanced property data display */
+.property-data-highlight {
+  background: linear-gradient(135deg, #fff3cd 0%, #ffeaa7 100%);
+  border-left: 4px solid #ffc107;
+  padding: 0.75rem;
+  margin: 0.5rem 0;
+  border-radius: 6px;
+  font-weight: 500;
+}
+
+.property-coordinate-display {
+  font-family: 'Courier New', monospace;
+  background: #f8f9fa;
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  font-size: 0.85rem;
+  color: #495057;
+}
+/* Enhanced CSS for PropertyService Integration - Add to App.css */
+
+/* ✅ NEW: Enhanced button states for property creation */
+.modal-btn {
+  padding: 0.75rem 1.5rem;
+  border: none;
+  border-radius: 25px;
+  font-weight: 600;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  min-width: 160px;
+}
+
+.modal-btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.modal-btn-secondary {
+  background: var(--cbre-light-grey);
+  color: var(--cbre-dark-grey);
+}
+
+.modal-btn-secondary:hover:not(:disabled) {
+  background: var(--cbre-dark-grey);
+  color: white;
+  transform: translateY(-1px);
+}
+
+.modal-btn-primary {
+  background: linear-gradient(135deg, var(--cbre-accent-green) 0%, #00C896 100%);
+  color: var(--cbre-dark-green);
+}
+
+.modal-btn-primary:hover:not(:disabled) {
+  background: linear-gradient(135deg, #00C896 0%, var(--cbre-accent-green) 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 12px rgba(23, 232, 143, 0.3);
+}
+
+.modal-btn-primary:disabled {
+  background: linear-gradient(135deg, #ccc 0%, #999 100%);
+  color: #666;
+}
+
+/* ✅ NEW: Success button styling */
+.modal-btn-success {
+  background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+  color: white;
+  border: none;
+  padding: 0.75rem 1.5rem;
+  border-radius: 25px;
+  font-weight: 600;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  min-width: 160px;
+}
+
+.modal-btn-success:hover {
+  background: linear-gradient(135deg, #20c997 0%, #28a745 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 12px rgba(40, 167, 69, 0.3);
+}
+
+/* ✅ NEW: Retry button styling */
+.modal-btn-retry {
+  background: linear-gradient(135deg, #ffc107 0%, #fd7e14 100%);
+  color: #212529;
+  border: none;
+  padding: 0.75rem 1.5rem;
+  border-radius: 25px;
+  font-weight: 600;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  min-width: 160px;
+}
+
+.modal-btn-retry:hover {
+  background: linear-gradient(135deg, #fd7e14 0%, #ffc107 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 12px rgba(255, 193, 7, 0.3);
+}
+
+/* ✅ NEW: Inline spinner for buttons */
+.btn-spinner {
+  width: 16px;
+  height: 16px;
+  border: 2px solid transparent;
+  border-top: 2px solid currentColor;
+  border-radius: 50%;
+  animation: btnSpin 1s linear infinite;
+}
+
+@keyframes btnSpin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* ✅ NEW: Enhanced creation result states */
+.creation-result-success {
+  background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%);
+  border: 2px solid #28a745;
+  color: #155724;
+  padding: 1rem;
+  border-radius: 8px;
+  margin-top: 1rem;
+  animation: slideInSuccess 0.5s ease-out;
+}
+
+.creation-result-error {
+  background: linear-gradient(135deg, #f8d7da 0%, #f5c6cb 100%);
+  border: 2px solid #dc3545;
+  color: #721c24;
+  padding: 1rem;
+  border-radius: 8px;
+  margin-top: 1rem;
+  animation: slideInError 0.5s ease-out;
+}
+
+@keyframes slideInSuccess {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+    background: #fff;
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+    background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%);
+  }
+}
+
+@keyframes slideInError {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+    background: #fff;
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+    background: linear-gradient(135deg, #f8d7da 0%, #f5c6cb 100%);
+  }
+}
+
+/* ✅ REMOVED: Asset class dropdown styles - no longer needed */
+
+/* ✅ NEW: Property creation loading overlay enhancement */
+.property-creation-loading {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  opacity: 0.8;
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0% { opacity: 0.8; }
+  50% { opacity: 1; }
+  100% { opacity: 0.8; }
+}
+
+/* ✅ NEW: Enhanced modal footer layout */
+.modal-footer {
+  padding: 1rem 1.5rem;
+  background: #f8f9fa;
+  border-top: 1px solid #e5e7eb;
+  display: flex;
+  gap: 1rem;
+  justify-content: flex-end;
+  align-items: center;
+}
+
+/* ✅ NEW: Responsive enhancements for mobile */
+@media (max-width: 768px) {
+  .modal-footer {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+  
+  .modal-btn {
+    width: 100%;
+    min-width: auto;
+  }
+  
+  .creation-result-success,
+  .creation-result-error {
+    margin: 0.5rem 0;
+    padding: 0.75rem;
+  }
+}
+
+/* ✅ NEW: Asset class selection styling */
+.asset-class-selection {
+  display: grid;
+  gap: 0.5rem;
+}
+
+.asset-class-item,
+.sub-asset-class-item {
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  padding: 0.75rem;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  background: white;
+  transition: all 0.2s ease;
+  position: relative;
+}
+
+.asset-class-item:hover,
+.sub-asset-class-item:hover {
+  border-color: var(--cbre-accent-green);
+  box-shadow: 0 2px 4px rgba(23, 232, 143, 0.1);
+}
+
+.asset-class-item.selected,
+.sub-asset-class-item.selected {
+  border: 2px solid var(--cbre-accent-green);
+  background: rgba(23, 232, 143, 0.1);
+  box-shadow: 0 2px 8px rgba(23, 232, 143, 0.2);
+}
+
+.asset-class-item.disabled,
+.sub-asset-class-item.disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  background: #f5f5f5;
+}
+
+.asset-class-checkbox {
+  margin-right: 0.75rem;
+  accent-color: var(--cbre-accent-green);
+  transform: scale(1.1);
+}
+
+.asset-class-name {
+  font-weight: 500;
+  color: #2c3e50;
+  flex: 1;
+}
+
+.sub-asset-class-parent {
+  margin-left: auto;
+  font-size: 0.8rem;
+  color: #666;
+  font-style: italic;
+  background: #f8f9fa;
+  padding: 0.25rem 0.5rem;
+  border-radius: 12px;
+  border: 1px solid #e9ecef;
+}
+
+.sub-asset-class-list {
+  max-height: 250px;
+  overflow-y: auto;
+  padding-right: 0.25rem;
+}
+
+.sub-asset-class-list::-webkit-scrollbar {
+  width: 4px;
+}
+
+.sub-asset-class-list::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 2px;
+}
+
+.sub-asset-class-list::-webkit-scrollbar-thumb {
+  background: var(--cbre-accent-green);
+  border-radius: 2px;
+}
+
+.sub-asset-class-list::-webkit-scrollbar-thumb:hover {
+  background: var(--cbre-green);
+}
+
+.asset-class-section-title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1rem;
+}
+
+.asset-class-count {
+  font-size: 0.8rem;
+  color: var(--cbre-accent-green);
+  font-weight: 600;
+  background: rgba(23, 232, 143, 0.1);
+  padding: 0.25rem 0.5rem;
+  border-radius: 12px;
+}
+
+.asset-class-help-text {
+  font-size: 0.9rem;
+  color: #666;
+  margin-bottom: 1rem;
+  line-height: 1.4;
+}
+
+/* ✅ NEW: Responsive adjustments for asset class selection */
+@media (max-width: 768px) {
+  .asset-class-item,
+  .sub-asset-class-item {
+    padding: 0.5rem;
+  }
+  
+  .sub-asset-class-parent {
+    display: none; /* Hide parent class on mobile to save space */
+  }
+  
+  .sub-asset-class-list {
+    max-height: 200px;
+  }
+}
+
+/* ✅ NEW: Focus states for accessibility */
+.modal-btn:focus {
+  outline: 3px solid rgba(23, 232, 143, 0.3);
+  outline-offset: 2px;
+}
+
+/* ✅ REMOVED: Asset class dropdown focus styles - no longer needed */
+
+/* ✅ NEW: Enhanced property data display */
+.property-data-highlight {
+  background: linear-gradient(135deg, #fff3cd 0%, #ffeaa7 100%);
+  border-left: 4px solid #ffc107;
+  padding: 0.75rem;
+  margin: 0.5rem 0;
+  border-radius: 6px;
+  font-weight: 500;
+}
+
+.property-coordinate-display {
+  font-family: 'Courier New', monospace;
+  background: #f8f9fa;
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  font-size: 0.85rem;
+  color: #495057;
+}
 /* Import ArcGIS CSS */
 @import url('https://js.arcgis.com/4.28/esri/themes/light/main.css');
